@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
+import { useState } from "react";
 import type { MockProtocolBlock } from "@/data/mock-portfolio";
 import { formatUsd } from "@/data/mock-portfolio";
 
@@ -11,12 +12,48 @@ type ProtocolBlocksProps = {
   refreshing: boolean;
 };
 
+function BlockLogo({ block }: { block: MockProtocolBlock }) {
+  const [broken, setBroken] = useState(false);
+  const initial = block.name.slice(0, 1).toUpperCase();
+  if (block.logoUrl && !broken) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={block.logoUrl}
+        alt=""
+        width={28}
+        height={28}
+        className="h-7 w-7 shrink-0 rounded-md object-cover"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  return (
+    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--surface-muted)] text-xs font-semibold text-[var(--muted)]">
+      {initial}
+    </span>
+  );
+}
+
 export function ProtocolBlocks({
   blocks,
   showDust,
   refreshing,
 }: ProtocolBlocksProps) {
   const list = showDust ? blocks : blocks.filter((b) => !b.isDust);
+
+  if (list.length === 0) {
+    return (
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/80 p-6 text-sm text-[var(--muted)]">
+        <p className="max-w-2xl leading-relaxed">
+          Token balances above are live from Sui mainnet (RPC + public prices). Aggregated
+          DeFi positions (NAVI, Cetus, Suilend, etc.) are not indexed in Lenscan yet — we
+          will add protocol-specific readers next so lending, LP, and borrow rows match
+          on-chain reality.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -35,10 +72,13 @@ export function ProtocolBlocks({
                 href={block.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-base font-semibold text-[var(--foreground)] transition-colors hover:text-[var(--accent)]"
+                className="inline-flex items-center gap-2 text-base font-semibold text-[var(--foreground)] transition-colors hover:text-[var(--accent)]"
               >
-                {block.name}
-                <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+                <BlockLogo block={block} />
+                <span className="inline-flex items-center gap-1">
+                  {block.name}
+                  <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+                </span>
               </a>
               <p className="text-sm text-[var(--muted)]">{block.subtitle}</p>
             </div>

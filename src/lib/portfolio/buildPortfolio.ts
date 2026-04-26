@@ -102,8 +102,7 @@ export async function buildRealPortfolio(
   const metadata = missing.length > 0 ? await fetchCoinMetadataMany(missing, signal) : {};
 
   // Build rows
-  type Pre = TokenHolding & { _coinType: string };
-  const pre: Pre[] = nonZero.map((b) => {
+  const pre: TokenHolding[] = nonZero.map((b) => {
     const p: LlamaPrice | undefined = prices[b.coinType];
     const md = metadata[b.coinType];
     const hint: SymbolHint = p
@@ -122,6 +121,7 @@ export async function buildRealPortfolio(
     const valueUsd = amountFloat * priceUsd;
 
     return {
+      coinType: b.coinType,
       symbol,
       name,
       priceUsd: formatPrice(priceUsd),
@@ -130,7 +130,6 @@ export async function buildRealPortfolio(
       valueUsd,
       valueUsdFormatted: formatUsd(valueUsd),
       allocationPct: 0,
-      _coinType: b.coinType,
     };
   });
 

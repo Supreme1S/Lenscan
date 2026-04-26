@@ -14,8 +14,10 @@ export type MockProtocolTile = {
   id: string;
   name: string;
   valueUsd: number;
-  /** emoji or path placeholder — no image CDN in Phase 2 */
+  /** Fallback monogram when `logoUrl` is not set. */
   logo: string;
+  /** Optional remote icon (protocol or chain). */
+  logoUrl?: string;
   anchorId: string;
   /** When false, tile is hidden until "Show all" */
   isDust: boolean;
@@ -45,6 +47,8 @@ export type MockProtocolBlock = {
   subtitle: string;
   totalUsd: number;
   kind: "lending" | "lp";
+  /** Small logo beside the protocol name. */
+  logoUrl?: string;
   lendingRows?: MockLendingRow[];
   lpRows?: MockLpRow[];
   isDust: boolean;
@@ -104,6 +108,7 @@ export const MOCK_PROTOCOL_TILES: MockProtocolTile[] = [
     name: "Wallet",
     valueUsd: MOCK_WALLET_TOKENS.reduce((s, t) => s + t.valueUsd, 0),
     logo: "◆",
+    logoUrl: "https://icons.llama.fi/icons/chains/rsz_sui.jpg",
     anchorId: "section-wallet",
     isDust: false,
   },
@@ -112,6 +117,7 @@ export const MOCK_PROTOCOL_TILES: MockProtocolTile[] = [
     name: "NAVI",
     valueUsd: 18420,
     logo: "N",
+    logoUrl: "https://icons.llama.fi/icons/protocols/navi-lending.png",
     anchorId: "section-navi",
     isDust: false,
   },
@@ -120,6 +126,7 @@ export const MOCK_PROTOCOL_TILES: MockProtocolTile[] = [
     name: "Suilend",
     valueUsd: 3200,
     logo: "S",
+    logoUrl: "https://icons.llama.fi/icons/protocols/suilend.png",
     anchorId: "section-suilend",
     isDust: false,
   },
@@ -128,6 +135,7 @@ export const MOCK_PROTOCOL_TILES: MockProtocolTile[] = [
     name: "Cetus",
     valueUsd: 2100,
     logo: "C",
+    logoUrl: "https://icons.llama.fi/icons/protocols/cetus.png",
     anchorId: "section-cetus",
     isDust: false,
   },
@@ -149,6 +157,7 @@ export const MOCK_PROTOCOL_BLOCKS: MockProtocolBlock[] = [
     subtitle: "NAVI Protocol — Lending",
     totalUsd: 18420,
     kind: "lending",
+    logoUrl: "https://icons.llama.fi/icons/protocols/navi-lending.png",
     isDust: false,
     lendingRows: [
       {
@@ -184,6 +193,7 @@ export const MOCK_PROTOCOL_BLOCKS: MockProtocolBlock[] = [
     subtitle: "Suilend — Lending",
     totalUsd: 3200,
     kind: "lending",
+    logoUrl: "https://icons.llama.fi/icons/protocols/suilend.png",
     isDust: false,
     lendingRows: [
       {
@@ -203,6 +213,7 @@ export const MOCK_PROTOCOL_BLOCKS: MockProtocolBlock[] = [
     subtitle: "Cetus — Liquidity",
     totalUsd: 2100,
     kind: "lp",
+    logoUrl: "https://icons.llama.fi/icons/protocols/cetus.png",
     isDust: false,
     lpRows: [
       {
@@ -221,6 +232,7 @@ export const MOCK_PROTOCOL_BLOCKS: MockProtocolBlock[] = [
     subtitle: "Turbos — Staking",
     totalUsd: 12,
     kind: "lending",
+    logoUrl: "https://icons.llama.fi/icons/protocols/turbos.png",
     isDust: true,
     lendingRows: [
       {

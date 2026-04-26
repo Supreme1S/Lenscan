@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ConnectWalletControl } from "@/components/layout/connect-wallet-control";
 import { ThemeHoverMenu } from "@/components/layout/theme-hover-menu";
-import { useWallet } from "@/contexts/wallet-context";
 import { cn } from "@/lib/utils";
 
 const glass =
@@ -13,7 +12,6 @@ const glass =
 export function TopBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { connectedAddress } = useWallet();
 
   function onPortfolioNavClick(e: React.MouseEvent<HTMLAnchorElement>) {
     const onPortfolio = pathname === "/portfolio";
@@ -22,7 +20,7 @@ export function TopBar() {
         ? new URLSearchParams(window.location.search)
         : null;
     const hasAddress = Boolean(params?.get("address")?.trim());
-    if (onPortfolio && !hasAddress && !connectedAddress) {
+    if (onPortfolio && !hasAddress) {
       e.preventDefault();
       router.push("/");
     }

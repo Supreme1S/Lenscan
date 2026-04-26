@@ -2,14 +2,14 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useMemo, useState } from "react";
-import type { MockTokenRow } from "@/data/mock-portfolio";
 import { formatUsd } from "@/data/mock-portfolio";
+import type { WalletTokenRow } from "@/lib/portfolio/mapTokenRows";
 import { cn } from "@/lib/utils";
 
 const THRESHOLD = 10;
 
 type WalletTokensTableProps = {
-  tokens: MockTokenRow[];
+  tokens: WalletTokenRow[];
   refreshing: boolean;
 };
 
@@ -68,19 +68,23 @@ export function WalletTokensTable({ tokens, refreshing }: WalletTokensTableProps
                     </div>
                   </td>
                   <td className="px-3 py-2 tabular-nums">
-                    <span>{formatUsd(t.priceUsd)}</span>
-                    <span
-                      className={cn(
-                        "ml-2 text-xs",
-                        t.change24hPct >= 0 ? "text-emerald-600" : "text-red-600",
-                      )}
-                    >
-                      {t.change24hPct >= 0 ? "+" : ""}
-                      {t.change24hPct.toFixed(2)}%
-                    </span>
+                    <span>{t.priceLabel}</span>
+                    {t.change24hPct == null ? (
+                      <span className="ml-2 text-xs text-[var(--muted)]">—</span>
+                    ) : (
+                      <span
+                        className={cn(
+                          "ml-2 text-xs",
+                          t.change24hPct >= 0 ? "text-emerald-600" : "text-red-600",
+                        )}
+                      >
+                        {t.change24hPct >= 0 ? "+" : ""}
+                        {t.change24hPct.toFixed(2)}%
+                      </span>
+                    )}
                   </td>
                   <td className="px-3 py-2 tabular-nums text-[var(--foreground)]">
-                    {t.amount.toLocaleString()}
+                    {t.amountLabel}
                   </td>
                   <td className="px-3 py-2 tabular-nums font-medium text-[var(--foreground)]">
                     {formatUsd(t.valueUsd)}

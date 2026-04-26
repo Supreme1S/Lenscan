@@ -43,24 +43,7 @@ export function NftsTab({ collections }: NftsTabProps) {
               >
                 <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {col.items.map((nft) => (
-                    <motion.div
-                      key={nft.id}
-                      layout
-                      whileHover={{ y: -2 }}
-                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition-shadow hover:shadow-md"
-                    >
-                      <div className="flex aspect-square items-center justify-center rounded-md bg-[var(--surface-muted)] text-4xl">
-                        {nft.imageEmoji}
-                      </div>
-                      <p className="mt-2 text-xs text-[var(--muted)]">{col.name}</p>
-                      <p className="text-sm font-medium text-[var(--foreground)]">
-                        {nft.name}
-                      </p>
-                      <p className="mt-1 text-xs tabular-nums text-[var(--muted)]">
-                        Floor{" "}
-                        {nft.floorUsd != null ? formatUsd(nft.floorUsd) : "—"}
-                      </p>
-                    </motion.div>
+                    <NftCard key={nft.id} colName={col.name} nft={nft} />
                   ))}
                 </div>
               </motion.div>
@@ -69,5 +52,35 @@ export function NftsTab({ collections }: NftsTabProps) {
         </div>
       ))}
     </div>
+  );
+}
+
+function NftCard({ colName, nft }: { colName: string; nft: MockNftCollection["items"][number] }) {
+  const [imgBroken, setImgBroken] = useState(false);
+  return (
+    <motion.div
+      layout
+      whileHover={{ y: -2 }}
+      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3 shadow-sm transition-shadow hover:shadow-md"
+    >
+      <div className="flex aspect-square items-center justify-center overflow-hidden rounded-md bg-[var(--surface-muted)] text-4xl">
+        {nft.imageUrl && !imgBroken ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={nft.imageUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            onError={() => setImgBroken(true)}
+          />
+        ) : (
+          <span aria-hidden>{nft.imageEmoji ?? "◆"}</span>
+        )}
+      </div>
+      <p className="mt-2 text-xs text-[var(--muted)]">{colName}</p>
+      <p className="text-sm font-medium text-[var(--foreground)]">{nft.name}</p>
+      <p className="mt-1 text-xs tabular-nums text-[var(--muted)]">
+        Floor {nft.floorUsd != null ? formatUsd(nft.floorUsd) : "—"}
+      </p>
+    </motion.div>
   );
 }

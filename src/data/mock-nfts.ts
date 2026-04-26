@@ -2,7 +2,9 @@ export type MockNft = {
   id: string;
   name: string;
   collection: string;
-  imageEmoji: string;
+  /** Shown when `imageUrl` is missing or fails to load. */
+  imageEmoji?: string;
+  imageUrl?: string;
   floorUsd: number | null;
 };
 

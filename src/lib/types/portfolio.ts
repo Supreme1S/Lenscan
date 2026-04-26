@@ -8,6 +8,8 @@ export type PortfolioSummary = {
 };
 
 export type TokenHolding = {
+  /** Full Move coin type, e.g. `0x2::sui::SUI`. */
+  coinType: string;
   symbol: string;
   name: string;
   priceUsd: string;
@@ -28,6 +30,8 @@ export type TransactionRow = {
   id: string;
   digest: string;
   kind: "send" | "receive" | "swap" | "other";
+  /** Epoch ms when known (for sorting / absolute dates in UI). */
+  timestampMs: number;
   timestamp: string;
   summary: string;
   status: "success" | "failed" | "pending";

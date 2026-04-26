@@ -93,10 +93,12 @@ function toRow(tx: TxBlockSummary, address: string): TransactionRow {
         ? "failed"
         : "pending";
   const { kind, summary } = classify(tx.balanceChanges ?? [], address);
+  const ts = Number(tx.timestampMs ?? 0);
   return {
     id: tx.digest,
     digest: shortenDigest(tx.digest),
     kind,
+    timestampMs: Number.isFinite(ts) ? ts : 0,
     timestamp: formatTimestamp(tx.timestampMs),
     summary,
     status,

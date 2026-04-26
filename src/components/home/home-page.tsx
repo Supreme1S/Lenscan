@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ConnectWalletControl } from "@/components/layout/connect-wallet-control";
 import { Input } from "@/components/ui/input";
 import { pickRandomWallet } from "@/data/random-wallets";
 import { isValidSuiAddress, normalizeSuiAddress } from "@/lib/sui-address";
@@ -80,16 +79,18 @@ export function HomePage() {
           </p>
         ) : null}
 
-        <div className="mt-6 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <div className="mt-6 flex flex-col items-center gap-2">
           <button
             type="button"
             onClick={randomNavigate}
             className="text-sm font-medium text-[var(--accent)] underline-offset-4 transition-opacity hover:underline active:opacity-80"
           >
-            Random Wallet
+            Random wallet
           </button>
-          <span className="hidden text-[var(--border)] sm:inline">·</span>
-          <ConnectWalletControl />
+          <p className="max-w-md text-center text-xs leading-relaxed text-[var(--muted)]">
+            Picks a random address from ~500 recent mainnet senders (refreshed offline). Use
+            the search bar for a specific wallet.
+          </p>
         </div>
       </motion.div>
     </div>

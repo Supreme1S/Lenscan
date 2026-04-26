@@ -6,6 +6,31 @@ import type { MockProtocolTile } from "@/data/mock-portfolio";
 import { formatUsd } from "@/data/mock-portfolio";
 import { cn } from "@/lib/utils";
 
+function TileLogo({ tile }: { tile: MockProtocolTile }) {
+  const [broken, setBroken] = useState(false);
+  if (tile.logoUrl && !broken) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- remote protocol icons; small static list
+      <img
+        src={tile.logoUrl}
+        alt=""
+        width={32}
+        height={32}
+        className="h-8 w-8 rounded-lg object-cover"
+        onError={() => setBroken(true)}
+      />
+    );
+  }
+  return (
+    <span
+      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-sm"
+      aria-hidden
+    >
+      {tile.logo}
+    </span>
+  );
+}
+
 type ProtocolTilesProps = {
   tiles: MockProtocolTile[];
   onExpandDust?: () => void;
@@ -32,12 +57,7 @@ export function ProtocolTiles({ tiles, onExpandDust }: ProtocolTilesProps) {
             )}
           >
             <div className="flex items-center gap-2">
-              <span
-                className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--surface-muted)] text-sm"
-                aria-hidden
-              >
-                {tile.logo}
-              </span>
+              <TileLogo tile={tile} />
               <span className="text-sm font-semibold text-[var(--foreground)]">
                 {tile.name}
               </span>
