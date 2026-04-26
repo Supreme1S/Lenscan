@@ -1,21 +1,33 @@
 @import "tailwindcss";
 
+/* Light theme (default). Future dark: toggle `class="dark"` on <html> and uncomment/use .dark block. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --muted: #64748b;
+  --accent: #0f172a;
+}
+
+/* Reserved for future dark theme — not applied until `html.dark` is toggled. */
+html.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --surface: #1e293b;
+  --surface-muted: #334155;
+  --border: #334155;
+  --border-subtle: #1e293b;
+  --muted: #94a3b8;
+  --accent: #f8fafc;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
