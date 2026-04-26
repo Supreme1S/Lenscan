@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
-import { buildRealPortfolio } from "@/lib/portfolio/buildPortfolio";
+import {
+  buildRealPortfolio,
+  PortfolioBuildError,
+} from "@/lib/portfolio/buildPortfolio";
 import { isValidSuiAddress, normalizeSuiAddress } from "@/lib/sui-address";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function mergeTimeoutSignal(req: Request): AbortSignal {
+  if (typeof AbortSignal.any === "function") {
+    return AbortSignal.any([AbortSignal.timeout(10_000), req.signal]);
+  }
+  return AbortSignal.timeout(10_000);
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -12,11 +22,17 @@ export async function GET(req: Request) {
   if (!isValidSuiAddress(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
   }
+
+  const signal = mergeTimeoutSignal(req);
+
   try {
-    const data = await buildRealPortfolio(address);
+    const data = await buildRealPortfolio(address, signal);
     return NextResponse.json(data);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({ error: msg }, { status: 502 });
+    const stage: string =
+      e instanceof PortfolioBuildError ? e.stage : "unknown";
+    console.error(JSON.stringify({ address, stage, error: msg }));
+    return NextResponse.json({ error: msg, stage }, { status: 502 });
   }
 }

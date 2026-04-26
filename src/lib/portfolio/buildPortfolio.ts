@@ -24,6 +24,21 @@ import type {
   TokenHolding,
 } from "@/lib/types/portfolio";
 
+/** Thrown when Sui RPC balance fetch fails; other stages soft-fail inside `buildRealPortfolio`. */
+export class PortfolioBuildError extends Error {
+  constructor(
+    public readonly stage: "rpc_balances",
+    message: string,
+  ) {
+    super(message);
+    this.name = "PortfolioBuildError";
+  }
+}
+
+function errMsg(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}
+
 const ALLOC_COLORS = {
   Native: "#4DA2FF",
   Stable: "#22c55e",
@@ -85,8 +100,23 @@ export async function buildRealPortfolio(
   address: string,
   signal?: AbortSignal,
 ): Promise<RealPortfolio> {
-  const balances: SuiBalance[] = await getAllBalances(address, { signal });
+  let balances: SuiBalance[];
+  try {
+    balances = await getAllBalances(address, { signal });
+  } catch (e) {
+    throw new PortfolioBuildError("rpc_balances", errMsg(e));
+  }
+
   if (balances.length === 0) {
+    console.log(
+      JSON.stringify({
+        address,
+        total_coins: 0,
+        priced: 0,
+        unpriced: 0,
+        net_worth_usd: 0,
+      }),
+    );
     return {
       summary: emptySummary(address),
       tokenHoldings: [],
@@ -100,21 +130,55 @@ export async function buildRealPortfolio(
   const nonZero = balances.filter((b) => b.totalBalance !== "0");
   const coinTypes = nonZero.map((b) => b.coinType);
 
-  // Step 1 — DefiLlama prices
-  const llamaPrices = await fetchSuiPrices(coinTypes, signal);
+  // Step 1 — DefiLlama prices (soft fail)
+  let llamaPrices: LlamaPriceMap = {};
+  try {
+    llamaPrices = await fetchSuiPrices(coinTypes, signal);
+  } catch (e) {
+    console.warn(
+      JSON.stringify({
+        address,
+        stage: "defillama_prices",
+        error: errMsg(e),
+      }),
+    );
+  }
   const prices: LlamaPriceMap = { ...llamaPrices };
 
-  // Step 2 — Birdeye for coins Llama missed (merge into `prices`)
+  // Step 2 — Birdeye for coins Llama missed (soft fail)
   const missingFromLlama = coinTypes.filter((ct) => !llamaPrices[ct]);
-  const birdeyePrices = await fetchBirdeyePrices(missingFromLlama, signal);
-  for (const [ct, row] of Object.entries(birdeyePrices)) {
-    if (row) prices[ct] = row;
+  try {
+    const birdeyePrices = await fetchBirdeyePrices(missingFromLlama, signal);
+    for (const [ct, row] of Object.entries(birdeyePrices)) {
+      if (row) prices[ct] = row;
+    }
+  } catch (e) {
+    console.warn(
+      JSON.stringify({
+        address,
+        stage: "birdeye_prices",
+        error: errMsg(e),
+      }),
+    );
   }
 
-  // Step 3 — metadata for any coin Llama didn't return (Birdeye has placeholder decimals/symbol)
+  // Step 3 — metadata for any coin Llama didn't return (soft fail)
   const missingMeta = coinTypes.filter((ct) => !llamaPrices[ct]);
-  const metadata =
-    missingMeta.length > 0 ? await fetchCoinMetadataMany(missingMeta, signal) : {};
+  let metadata: Awaited<ReturnType<typeof fetchCoinMetadataMany>> = {};
+  if (missingMeta.length > 0) {
+    try {
+      metadata = await fetchCoinMetadataMany(missingMeta, signal);
+    } catch (e) {
+      console.warn(
+        JSON.stringify({
+          address,
+          stage: "coin_metadata",
+          error: errMsg(e),
+        }),
+      );
+      metadata = {};
+    }
+  }
 
   // Build rows
   const pre: TokenHolding[] = nonZero.map((b) => {
@@ -196,14 +260,30 @@ export async function buildRealPortfolio(
     totalDefiUsd: "$0.00",
   };
 
+  const unpricedCount = coinTypes.filter((ct) => {
+    const pr = prices[ct];
+    return pr == null || pr.price <= 0;
+  }).length;
+  const pricedCount = coinTypes.filter((ct) => {
+    const pr = prices[ct];
+    return pr != null && pr.price > 0;
+  }).length;
+
+  console.log(
+    JSON.stringify({
+      address,
+      total_coins: balances.length,
+      priced: pricedCount,
+      unpriced: unpricedCount,
+      net_worth_usd: totalValue,
+    }),
+  );
+
   return {
     summary,
     tokenHoldings,
     allocation,
-    unpricedCount: coinTypes.filter((ct) => {
-      const pr = prices[ct];
-      return pr == null || pr.price <= 0;
-    }).length,
+    unpricedCount,
     empty: false,
   };
 }
