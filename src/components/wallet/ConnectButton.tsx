@@ -2,11 +2,10 @@
 
 import { ConnectModal, useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
 import { useState } from "react";
-import { LiquidButton } from "@/components/ui/LiquidGlass";
+import { Button } from "@/components/ui/Button";
 import { shortenAddress } from "@/lib/sui/address";
 
 type Props = {
-  /** Compact = pill style for TopBar; default = bigger button for Home/empty states */
   variant?: "default" | "compact";
 };
 
@@ -14,37 +13,29 @@ export function ConnectButton({ variant = "default" }: Props) {
   const account = useCurrentAccount();
   const { mutate: disconnect } = useDisconnectWallet();
   const [open, setOpen] = useState(false);
-
-  const compact = variant === "compact";
-  const padding = compact ? "px-3 py-1.5" : "px-5 py-2.5";
+  const size = variant === "compact" ? "sm" : "md";
 
   if (account) {
     return (
-      <LiquidButton
+      <Button
         type="button"
+        variant="secondary"
+        size={size}
         onClick={() => disconnect()}
         title="Click to disconnect"
-        hue="teal"
-        padding={padding}
-        className={compact ? "text-xs" : "text-sm"}
+        className="font-mono"
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" aria-hidden />
-        <span className="font-mono">{shortenAddress(account.address)}</span>
-      </LiquidButton>
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+        {shortenAddress(account.address)}
+      </Button>
     );
   }
 
   return (
     <>
-      <LiquidButton
-        type="button"
-        onClick={() => setOpen(true)}
-        hue="indigo"
-        padding={padding}
-        className={compact ? "text-xs" : "text-sm font-semibold"}
-      >
+      <Button type="button" variant="primary" size={size} onClick={() => setOpen(true)}>
         Connect Wallet
-      </LiquidButton>
+      </Button>
       <ConnectModal trigger={<span className="hidden" />} open={open} onOpenChange={setOpen} />
     </>
   );

@@ -1,18 +1,32 @@
+/* eslint-disable @next/next/no-img-element */
 import { Card } from "@/components/ui/Card";
 import type { NftItem } from "@/lib/types/portfolio";
 
 export function NftCollectionGrid({ items }: { items: NftItem[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((nft) => (
         <Card key={nft.id} padding="p-4" className="overflow-hidden">
-          <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-indigo-100/80 to-zinc-200/80 text-4xl dark:from-indigo-950/50 dark:to-zinc-800/80">
-            ◆
+          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-xl bg-[var(--surface-muted)] text-3xl text-[var(--muted)]">
+            {nft.imageUrl ? (
+              <img
+                src={nft.imageUrl}
+                alt={nft.name}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <span aria-hidden>◆</span>
+            )}
           </div>
-          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-50">{nft.name}</p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">{nft.collection}</p>
+          <p className="mt-3 truncate text-sm font-medium text-[var(--foreground)]">
+            {nft.name}
+          </p>
+          <p className="truncate text-xs text-[var(--muted)]">
+            {nft.collection}
+          </p>
           {nft.floorHint ? (
-            <p className="mt-2 text-xs tabular-nums text-zinc-600 dark:text-zinc-300">
+            <p className="mt-2 text-xs tabular-nums text-[var(--muted)]">
               Floor {nft.floorHint}
             </p>
           ) : null}

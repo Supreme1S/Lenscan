@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { ConnectButton } from "@/components/wallet/ConnectButton";
-import { LiquidButton } from "@/components/ui/LiquidGlass";
 import { useResolveAddress } from "@/lib/hooks/useResolveAddress";
 import { useTheme } from "@/lib/hooks/useTheme";
 
@@ -29,18 +29,16 @@ export function TopBar({ onMenuClick }: TopBarProps) {
   }
 
   return (
-    <header className="liquid-surface sticky top-0 z-20 mx-3 mt-3 rounded-2xl px-3 py-2 lg:mx-4 lg:mt-4 lg:px-4">
-      <div className="relative z-10 flex items-center gap-3">
-        <LiquidButton
+    <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_80%,transparent)] px-4 py-3 backdrop-blur-md lg:px-6">
+      <div className="flex items-center gap-3">
+        <button
           type="button"
           onClick={onMenuClick}
-          shape="circle"
-          padding="p-0 h-9 w-9"
+          className="btn-ghost h-9 w-9 md:hidden"
           aria-label="Open menu"
-          className="md:hidden"
         >
           <span className="text-lg leading-none">☰</span>
-        </LiquidButton>
+        </button>
 
         <form onSubmit={handleSubmit} className="relative flex-1 min-w-0">
           <label className="sr-only" htmlFor="topbar-search">
@@ -52,21 +50,19 @@ export function TopBar({ onMenuClick }: TopBarProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search 0x… or alice.sui"
-            className="h-10 w-full min-w-0 rounded-full border border-[var(--border)] bg-[var(--surface)]/80 pl-4 pr-24 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--brand)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--brand)_18%,transparent)]"
+            className="h-10 w-full min-w-0 rounded-full border border-[var(--border)] bg-[var(--surface)] pl-4 pr-24 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--brand)] focus:outline-none focus:ring-4 focus:ring-[color-mix(in_srgb,var(--brand)_18%,transparent)]"
             autoComplete="off"
             spellCheck={false}
           />
-          <div className="absolute right-1 top-1">
-            <LiquidButton
-              type="submit"
-              disabled={!query.trim() || loading}
-              hue="indigo"
-              padding="px-3 py-1"
-              className="h-8 text-xs font-medium"
-            >
-              {loading ? "…" : "Scan"}
-            </LiquidButton>
-          </div>
+          <Button
+            type="submit"
+            variant="primary"
+            size="sm"
+            disabled={!query.trim() || loading}
+            className="absolute right-1 top-1 rounded-full"
+          >
+            {loading ? "…" : "Scan"}
+          </Button>
           {error ? (
             <p className="absolute left-3 top-full mt-1 text-[11px] text-[var(--warning)]">
               {error}
@@ -76,17 +72,15 @@ export function TopBar({ onMenuClick }: TopBarProps) {
 
         <div className="flex shrink-0 items-center gap-2">
           <ConnectButton variant="compact" />
-          <LiquidButton
+          <button
             type="button"
             onClick={toggle}
-            shape="circle"
-            padding="p-0 h-9 w-9"
+            className="btn-ghost h-9 w-9"
             aria-label="Toggle theme"
             title={`Theme: ${theme}`}
-            hue={theme === "dark" ? "amber" : "indigo"}
           >
             <span className="text-base">{theme === "dark" ? "☀" : "☾"}</span>
-          </LiquidButton>
+          </button>
         </div>
       </div>
     </header>

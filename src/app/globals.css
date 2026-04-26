@@ -1,48 +1,58 @@
 @import "tailwindcss";
 
-/* ---------- Tokens ---------- */
+/* ---------- Tokens (Sui-blue palette, flat) ---------- */
 :root {
-  --background: #f5f7fb;
-  --foreground: #0b1220;
+  --background: #f7f9fc;
+  --foreground: #0c111d;
   --surface: #ffffff;
-  --surface-muted: #eef1f6;
-  --border: #e3e6ee;
-  --border-subtle: #eef0f5;
-  --muted: #5b6478;
-  --accent: #0b1220;
-  --accent-foreground: #ffffff;
-  --brand: #4f46e5;
-  --brand-soft: #eef2ff;
-  --success: #16a34a;
-  --danger: #dc2626;
-  --warning: #b45309;
+  --surface-muted: #f1f5fa;
+  --surface-hover: #e9eff7;
+  --border: #e2e8f0;
+  --border-subtle: #eef2f7;
+  --muted: #5b6678;
 
-  /* Liquid-glass tokens */
-  --glass-tint: 255 255 255;
-  --glass-edge: 255 255 255;
-  --glass-shadow: 15 23 42;
-  --liquid-hue: rgba(99, 102, 241, 0.55), rgba(56, 189, 248, 0.30) 40%, transparent 70%;
+  /* Sui official accent */
+  --brand: #4da2ff;
+  --brand-hover: #2d8dff;
+  --brand-soft: #eaf4ff;
+  --brand-foreground: #ffffff;
+
+  /* Action accent (CTAs, "Scan", "Connect Wallet") */
+  --accent: #0c111d;
+  --accent-hover: #1c2433;
+  --accent-foreground: #ffffff;
+
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --warning: #b45309;
 }
 
 html.dark {
-  --background: #0a0d16;
-  --foreground: #f1f5f9;
+  --background: #0a0e1a;
+  --foreground: #eef2f7;
   --surface: #11151f;
   --surface-muted: #1a1f2c;
+  --surface-hover: #232a3a;
   --border: #232a3a;
   --border-subtle: #1a1f2c;
   --muted: #94a3b8;
-  --accent: #f1f5f9;
-  --accent-foreground: #0a0d16;
-  --brand: #818cf8;
-  --brand-soft: #1e1b4b;
-  --success: #34d399;
-  --danger: #f87171;
-  --warning: #fbbf24;
 
-  --glass-tint: 30 35 50;
-  --glass-edge: 255 255 255;
-  --glass-shadow: 0 0 0;
+  --brand: #4da2ff;
+  --brand-hover: #6db4ff;
+  --brand-soft: #0d2236;
+  --brand-foreground: #ffffff;
+
+  --accent: #eef2f7;
+  --accent-hover: #cbd5e1;
+  --accent-foreground: #0a0e1a;
+
+  --success: #34d399;
+  --success-soft: #082f1d;
+  --danger: #f87171;
+  --danger-soft: #2c0d10;
+  --warning: #fbbf24;
 }
 
 @theme inline {
@@ -56,108 +66,129 @@ html.dark {
   --font-sans: var(--font-geist-sans);
 }
 
-body {
-  background:
-    radial-gradient(70rem 36rem at 110% -10%, rgba(99, 102, 241, 0.14), transparent 60%),
-    radial-gradient(48rem 28rem at -10% 110%, rgba(34, 197, 94, 0.10), transparent 60%),
-    radial-gradient(40rem 28rem at 50% 120%, rgba(244, 114, 182, 0.07), transparent 70%),
-    var(--background);
-  color: var(--foreground);
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ====== LIQUID GLASS ======
- * The .liquid-surface utility produces a real frosted-glass droplet:
- *  - Element gets perspective tilt via --rx/--ry CSS vars (set on hover).
- *  - ::before is the FROSTED layer (blur + tint + colored blob that follows cursor).
- *  - ::after is the SPECULAR HIGHLIGHT that tracks the cursor.
- *  - A top edge highlight + bottom shadow give thickness.
- *  - In dark mode, tints flip via --glass-tint.
- */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 250ms ease, color 250ms ease;
+}
+
+/* ---------- Building blocks ---------- */
 @layer utilities {
-  .liquid-surface {
-    --mx: 50%;
-    --my: 50%;
-    --rx: 0deg;
-    --ry: 0deg;
-
-    position: relative;
-    isolation: isolate;
-    transform-style: preserve-3d;
-    transform: perspective(700px) rotateX(var(--rx)) rotateY(var(--ry));
-    transition: transform 220ms ease-out, box-shadow 220ms ease-out;
-
-    /* Outer thickness: top inner highlight + outer drop shadow */
-    box-shadow:
-      0 1px 0 rgb(var(--glass-edge) / 0.55) inset,
-      0 -1px 1px rgb(var(--glass-shadow) / 0.18) inset,
-      0 18px 40px -22px rgb(var(--glass-shadow) / 0.35),
-      0 4px 12px -4px rgb(var(--glass-shadow) / 0.18);
-
-    border: 1px solid rgb(var(--glass-edge) / 0.30);
-    background-color: rgb(var(--glass-tint) / 0.45);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    overflow: hidden;
-  }
-
-  /* Frosted backdrop layer with a colored blob that tracks the cursor.
-     This is the "liquid" — a soft radial gradient that warms the surface. */
-  .liquid-surface::before {
-    content: "";
-    position: absolute;
-    inset: -2px;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(
-        circle at var(--mx) var(--my),
-        var(--liquid-hue)
-      );
-    transition: background-position 200ms ease-out;
-    mix-blend-mode: plus-lighter;
-    opacity: 0.85;
-  }
-
-  /* Specular highlight — small bright glint that follows the cursor */
-  .liquid-surface::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background:
-      radial-gradient(
-        18% 30% at var(--mx) calc(var(--my) - 10%),
-        rgb(var(--glass-edge) / 0.55),
-        rgb(var(--glass-edge) / 0) 60%
-      ),
-      linear-gradient(
-        180deg,
-        rgb(var(--glass-edge) / 0.40) 0%,
-        rgb(var(--glass-edge) / 0.0) 30%,
-        rgb(var(--glass-shadow) / 0.06) 100%
-      );
-    mix-blend-mode: overlay;
-  }
-
-  /* Slight lift + brighter glow when the surface is hovered. */
-  .liquid-surface:hover {
-    box-shadow:
-      0 1px 0 rgb(var(--glass-edge) / 0.7) inset,
-      0 -1px 1px rgb(var(--glass-shadow) / 0.22) inset,
-      0 28px 56px -22px rgb(var(--glass-shadow) / 0.45),
-      0 6px 18px -4px rgb(var(--glass-shadow) / 0.25);
-  }
-
-  /* Soft non-glass surface for content panels */
+  /* Plain content panel */
   .surface-card {
     background-color: var(--surface);
     border: 1px solid var(--border);
     border-radius: 1rem;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+  .surface-card-hover:hover {
+    border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
+    box-shadow: 0 8px 24px -12px rgb(15 23 42 / 0.10);
+  }
+
+  /* Primary action button (Sui blue fill) */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--brand);
+    color: var(--brand-foreground);
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 6px 14px -6px color-mix(in srgb, var(--brand) 50%, transparent);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--brand-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.25) inset, 0 12px 20px -8px color-mix(in srgb, var(--brand) 55%, transparent);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .btn-primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Neutral secondary */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    font-weight: 500;
+    border-radius: 0.75rem;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--surface-hover);
+    border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+  }
+  .btn-secondary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* Ghost (icon button) */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    color: var(--muted);
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+  .btn-ghost:hover {
+    background-color: var(--surface-muted);
+    color: var(--foreground);
+  }
+
+  /* Subtle row hover for tables */
+  .row-hover:hover {
+    background-color: color-mix(in srgb, var(--brand-soft) 50%, transparent);
+  }
+
+  /* Animated entrance for cards */
+  @keyframes lenscan-fade-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .anim-fade-up {
+    animation: lenscan-fade-up 360ms cubic-bezier(0.22, 0.9, 0.32, 1) both;
+  }
+
+  /* Shimmer skeleton */
+  @keyframes lenscan-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .skeleton {
+    background:
+      linear-gradient(
+        90deg,
+        var(--surface-muted) 0%,
+        color-mix(in srgb, var(--brand) 12%, var(--surface-muted)) 50%,
+        var(--surface-muted) 100%
+      );
+    background-size: 200% 100%;
+    animation: lenscan-shimmer 1.6s linear infinite;
+    border-radius: 0.5rem;
   }
 }
 
-/* ====== Override @mysten/dapp-kit ConnectModal styles to fit our theme ====== */
+/* @mysten/dapp-kit ConnectModal — keep it on theme */
 [data-radix-popper-content-wrapper] [role="dialog"],
 [data-dapp-kit] [role="dialog"] {
   background: var(--surface) !important;

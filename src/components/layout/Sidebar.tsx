@@ -1,21 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
-type NavItem = { href: string; label: string; exact?: boolean };
+type NavItem = { href: string; label: string; exact?: boolean; carryAddress?: boolean };
 
 const nav: readonly NavItem[] = [
   { href: "/", label: "Home", exact: true },
-  { href: "/portfolio", label: "Portfolio" },
+  { href: "/portfolio", label: "Portfolio", carryAddress: true },
   { href: "/yields", label: "Yields" },
-  { href: "/nfts", label: "NFTs" },
-  { href: "/transactions", label: "Transactions" },
+  { href: "/nfts", label: "NFTs", carryAddress: true },
+  { href: "/transactions", label: "Transactions", carryAddress: true },
   { href: "/favorites", label: "Favorites" },
 ] as const;
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const address = searchParams?.get("address")?.trim() ?? "";
 
   return (
     <div className="flex h-full flex-col bg-[var(--surface)]">
@@ -29,7 +31,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           className="flex h-7 w-7 items-center justify-center rounded-lg text-[13px] font-bold text-white"
           style={{
             background:
-              "linear-gradient(135deg, var(--brand) 0%, color-mix(in srgb, var(--brand) 60%, #22c55e) 100%)",
+              "linear-gradient(135deg, #4DA2FF 0%, #1FCFE0 100%)",
           }}
         >
           L
@@ -39,14 +41,18 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </span>
       </Link>
       <nav className="flex flex-col gap-0.5 px-3">
-        {nav.map(({ href, label, exact }) => {
+        {nav.map(({ href, label, exact, carryAddress }) => {
           const active = exact
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`);
+          const finalHref =
+            carryAddress && address
+              ? `${href}?address=${encodeURIComponent(address)}`
+              : href;
           return (
             <Link
               key={href}
-              href={href}
+              href={finalHref}
               onClick={onNavigate}
               className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 active

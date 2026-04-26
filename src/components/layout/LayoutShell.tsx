@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
 
@@ -26,7 +26,9 @@ export function LayoutShell({ children }: { children: ReactNode }) {
           mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+        <Suspense fallback={null}>
+          <Sidebar onNavigate={() => setMobileNavOpen(false)} />
+        </Suspense>
       </aside>
 
       {/* Main column */}

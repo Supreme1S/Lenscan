@@ -21,6 +21,10 @@ export type RpcOptions = {
   signal?: AbortSignal;
 };
 
+export async function rpcCall<T>(method: string, params: unknown[], opts: RpcOptions = {}): Promise<T> {
+  return rpc<T>(method, params, opts);
+}
+
 async function rpc<T>(method: string, params: unknown[], opts: RpcOptions = {}): Promise<T> {
   const url = opts.rpcUrl ?? DEFAULT_RPC;
   const res = await fetch(url, {
@@ -66,11 +70,19 @@ export function getOwnedObjects(
   return rpc("suix_getOwnedObjects", [address, query, cursor, limit], opts);
 }
 
+export type SuiBalanceChange = {
+  owner?: { AddressOwner?: string; ObjectOwner?: string } | string | null;
+  coinType: string;
+  amount: string;
+};
+
 export type TxBlockSummary = {
   digest: string;
   timestampMs?: string | null;
+  checkpoint?: string | null;
   effects?: { status?: { status?: "success" | "failure" } } | null;
-  transaction?: unknown;
+  balanceChanges?: SuiBalanceChange[] | null;
+  transaction?: { data?: { sender?: string } } | null;
 };
 
 /** Resolves a SuiNS name (`alice.sui`) to its 0x address. Returns null if not found. */
@@ -86,15 +98,62 @@ export async function resolveSuiNs(
   }
 }
 
-export function queryTransactionBlocks(
+type TxQueryResult = {
+  data: TxBlockSummary[];
+  nextCursor: string | null;
+  hasNextPage: boolean;
+};
+
+/**
+ * Sui mainnet doesn't accept the `FromOrToAddress` filter, so we run two queries
+ * (FromAddress + ToAddress) in parallel and merge them by digest, newest first.
+ */
+export async function queryTransactionBlocks(
   address: string,
-  cursor: string | null = null,
   limit = 25,
   opts?: RpcOptions,
-): Promise<{ data: TxBlockSummary[]; nextCursor: string | null; hasNextPage: boolean }> {
-  const query = {
-    filter: { FromOrToAddress: { addr: address } },
-    options: { showEffects: true, showInput: false, showEvents: false },
+): Promise<TxQueryResult> {
+  const baseOptions = {
+    showEffects: true,
+    showInput: false,
+    showEvents: false,
+    showBalanceChanges: true,
   };
-  return rpc("suix_queryTransactionBlocks", [query, cursor, limit, true], opts);
+  const [from, to] = await Promise.all([
+    rpc<TxQueryResult>(
+      "suix_queryTransactionBlocks",
+      [
+        { filter: { FromAddress: address }, options: baseOptions },
+        null,
+        limit,
+        true,
+      ],
+      opts,
+    ).catch(() => ({ data: [], nextCursor: null, hasNextPage: false })),
+    rpc<TxQueryResult>(
+      "suix_queryTransactionBlocks",
+      [
+        { filter: { ToAddress: address }, options: baseOptions },
+        null,
+        limit,
+        true,
+      ],
+      opts,
+    ).catch(() => ({ data: [], nextCursor: null, hasNextPage: false })),
+  ]);
+
+  const map = new Map<string, TxBlockSummary>();
+  for (const tx of [...from.data, ...to.data]) {
+    if (!map.has(tx.digest)) map.set(tx.digest, tx);
+  }
+  const merged = Array.from(map.values()).sort((a, b) => {
+    const at = Number(a.timestampMs ?? 0);
+    const bt = Number(b.timestampMs ?? 0);
+    return bt - at;
+  });
+  return {
+    data: merged.slice(0, limit),
+    nextCursor: null,
+    hasNextPage: from.hasNextPage || to.hasNextPage,
+  };
 }
