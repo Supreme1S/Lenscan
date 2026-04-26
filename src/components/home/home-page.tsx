@@ -25,8 +25,16 @@ export function HomePage() {
 
   function randomNavigate() {
     setError(null);
-    const addr = pickRandomWallet();
+    const last =
+      typeof window !== "undefined"
+        ? window.sessionStorage.getItem("lenscan:last-random-address")
+        : null;
+    const addr = pickRandomWallet({ avoid: last ?? undefined });
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("lenscan:last-random-address", addr);
+    }
     router.push(`/portfolio?address=${encodeURIComponent(addr)}`);
+    router.refresh();
   }
 
   return (
@@ -79,7 +87,7 @@ export function HomePage() {
           </p>
         ) : null}
 
-        <div className="mt-6 flex flex-col items-center gap-2">
+        <div className="mt-6 flex flex-col items-center">
           <button
             type="button"
             onClick={randomNavigate}
@@ -87,10 +95,6 @@ export function HomePage() {
           >
             Random wallet
           </button>
-          <p className="max-w-md text-center text-xs leading-relaxed text-[var(--muted)]">
-            Picks a random address from ~500 recent mainnet senders (refreshed offline). Use
-            the search bar for a specific wallet.
-          </p>
         </div>
       </motion.div>
     </div>
