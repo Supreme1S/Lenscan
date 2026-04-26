@@ -1,11 +1,25 @@
 # Lenscan
 
-Minimal [Next.js](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS scaffold for **Lenscan**, a Sui-native DeBank-light portfolio viewer.
+A **Sui-native DeBank-light** portfolio scanner. Built with Next.js 16 (App Router), React 19, Tailwind v4, and Supabase.
+
+Inspired by [DeBank](https://debank.com/) and [Nimbus](https://getnimbus.io/portfolio); focused exclusively on the Sui chain.
+
+## Routes
+
+| Path             | Purpose                                                |
+| ---------------- | ------------------------------------------------------ |
+| `/`              | Home — explainer + central wallet input + Connect CTA |
+| `/portfolio`     | Net worth, holdings, allocation, DeFi positions        |
+| `/yields`        | Live Sui pools from DeFiLlama (APY, TVL, filters)      |
+| `/nfts`          | NFT collections held by a wallet                       |
+| `/transactions`  | Recent on-chain activity                               |
+| `/favorites`     | Bookmarked Sui wallets (Supabase)                      |
 
 ## Run locally
 
 ```bash
 npm install
+cp .env.local.example .env.local   # fill in Supabase URL + publishable key
 npm run dev
 ```
 
@@ -22,22 +36,67 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment
 
-Copy `.env.local.example` to `.env.local` and fill in values. Never commit `.env.local` (real secrets stay local or in Vercel env).
+`.env.local` keys (never commit real values):
 
-- **Sui RPC** — `NEXT_PUBLIC_SUI_RPC_URL`
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUI_RPC_URL=https://fullnode.mainnet.sui.io
+```
 
-## Supabase (Lenscan-only)
+## Supabase
 
-Use a **new Supabase project** dedicated to Lenscan. Do not reuse credentials from other apps (e.g. EventX).
+Use a **dedicated** Supabase project for Lenscan (do not reuse credentials from other apps).
 
-1. In [Supabase](https://supabase.com), create a project for Lenscan.
-2. Open **Project Settings → API**.
-3. Copy **Project URL** into `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`.
-4. Copy the **anon public** key into `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local`.
-5. Create the `favorites` table by running the SQL in `supabase/migrations/20260426140000_lenscan_favorites.sql` in the **SQL Editor** (or via Supabase CLI against this project only).
+1. Create the project in [Supabase](https://supabase.com).
+2. Settings → API → copy **Project URL** + **anon (publishable) key** into `.env.local`.
+3. Apply migrations from `supabase/migrations/` in order:
+   - `20260426140000_lenscan_favorites.sql` — creates `public.favorites`.
+   - `20260426150000_lenscan_favorites_rls.sql` — enables RLS + anon policies.
 
-The app exposes a browser client in `src/lib/supabase/client.ts` (`@supabase/supabase-js`). Call `assertSupabaseEnv()` before use if you want a hard fail when env is missing.
+Server access goes through `src/lib/supabase/server.ts`; the browser client is `src/lib/supabase/client.ts`.
+
+## Architecture
+
+```
+src/
+├── app/
+│   ├── layout.tsx                  Root layout + LayoutShell
+│   ├── page.tsx                    Home route
+│   └── (routes)/
+│       ├── portfolio/page.tsx      Reads ?address= and renders mock portfolio
+│       ├── yields/page.tsx         DeFiLlama-backed yields (ISR 10min)
+│       ├── nfts/page.tsx
+│       ├── transactions/page.tsx
+│       └── favorites/{page,actions}.tsx
+├── components/
+│   ├── layout/{LayoutShell,Sidebar,TopBar}.tsx
+│   ├── home/{HomePage,ScanWalletForm}.tsx
+│   ├── portfolio/...
+│   ├── yields/YieldsTable.tsx
+│   ├── nfts/...
+│   ├── transactions/...
+│   ├── favorites/FavoritesPage.tsx
+│   └── ui/{Card,Badge,Table,PillTabs,Skeleton}.tsx
+├── lib/
+│   ├── data/
+│   │   ├── favorites.ts            Supabase CRUD
+│   │   ├── yields.ts               DeFiLlama fetcher
+│   │   └── mock/...
+│   ├── defi/protocols.ts           Phase 3 adapter contract (Navi/Cetus/...)
+│   ├── sui/{address,rpc}.ts        Address helpers + JSON-RPC client
+│   ├── supabase/{client,server}.ts
+│   ├── types/{portfolio,yields}.ts
+│   └── wallet/suiWallet.ts         Phase 4 stub for @mysten/dapp-kit
+```
+
+## Phases
+
+- **Phase 1 (current)** — Layout shell, Home, Portfolio (mock), Favorites (Supabase, RLS), NFTs, Transactions.
+- **Phase 2 (live)** — Yields page wired to DeFiLlama.
+- **Phase 3 (groundwork)** — `lib/defi/protocols.ts` adapter contract + `lib/sui/rpc.ts`. Real Navi/Cetus/Suilend/Scallop adapters land next.
+- **Phase 4** — `@mysten/dapp-kit` connect, dark theme polish, AI summaries.
 
 ## Stack
 
-Next.js 16, React 19, Tailwind CSS v4, ESLint.
+Next.js 16 (Turbopack) · React 19 · Tailwind CSS v4 · Supabase · DeFiLlama API · Sui JSON-RPC.
