@@ -73,6 +73,19 @@ export type TxBlockSummary = {
   transaction?: unknown;
 };
 
+/** Resolves a SuiNS name (`alice.sui`) to its 0x address. Returns null if not found. */
+export async function resolveSuiNs(
+  name: string,
+  opts?: RpcOptions,
+): Promise<string | null> {
+  try {
+    const result = await rpc<string | null>("suix_resolveNameServiceAddress", [name], opts);
+    return result ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function queryTransactionBlocks(
   address: string,
   cursor: string | null = null,

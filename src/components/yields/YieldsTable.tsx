@@ -52,7 +52,7 @@ export function YieldsTable({ pools }: { pools: YieldPool[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="glass-panel rounded-2xl p-4">
+      <div className="surface-card rounded-2xl p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex flex-wrap gap-1.5">
             {CATEGORIES.map((c) => (

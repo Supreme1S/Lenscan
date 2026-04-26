@@ -22,7 +22,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         href="/"
         onClick={onNavigate}
-        className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4"
+        className="flex items-center gap-2.5 px-5 py-4"
       >
         <span
           aria-hidden
@@ -34,14 +34,11 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         >
           L
         </span>
-        <span className="text-base font-semibold tracking-tight text-[var(--foreground)]">
+        <span className="text-[15px] font-semibold tracking-tight text-[var(--foreground)]">
           Lenscan
         </span>
       </Link>
-      <p className="hidden px-4 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)] md:block">
-        Navigation
-      </p>
-      <nav className="flex flex-col gap-0.5 p-3">
+      <nav className="flex flex-col gap-0.5 px-3">
         {nav.map(({ href, label, exact }) => {
           const active = exact
             ? pathname === href
@@ -62,9 +59,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </nav>
-      <div className="mt-auto border-t border-[var(--border)] p-3 text-[11px] text-[var(--muted)]">
-        Sui-only · Phase 1 MVP
-      </div>
     </div>
   );
 }

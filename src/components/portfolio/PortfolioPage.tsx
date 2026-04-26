@@ -53,7 +53,7 @@ export function PortfolioPage({
 
       <div className="space-y-8 p-6 lg:p-8">
         {isMock ? (
-          <div className="glass-panel rounded-xl px-4 py-3 text-xs text-[var(--muted)]">
+          <div className="surface-card rounded-xl px-4 py-3 text-xs text-[var(--muted)]">
             Showing mock data. Real on-chain integration lands in Phase 3 — Navi,
             Cetus, Suilend, Scallop adapters are scaffolded under{" "}
             <code className="rounded bg-[var(--surface-muted)] px-1">
@@ -64,7 +64,7 @@ export function PortfolioPage({
         ) : null}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card>
+          <Card glass>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
               Net worth
             </p>
@@ -72,7 +72,7 @@ export function PortfolioPage({
               {summary.netWorthUsd}
             </p>
           </Card>
-          <Card>
+          <Card glass>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
               Total tokens
             </p>
@@ -80,7 +80,7 @@ export function PortfolioPage({
               {summary.totalTokensUsd}
             </p>
           </Card>
-          <Card>
+          <Card glass>
             <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
               Total DeFi
             </p>
@@ -89,7 +89,7 @@ export function PortfolioPage({
             </p>
           </Card>
           {summary.debtUsd ? (
-            <Card>
+            <Card glass>
               <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
                 Debt / Health
               </p>
@@ -105,7 +105,7 @@ export function PortfolioPage({
           ) : null}
         </section>
 
-        <section className="glass-panel rounded-2xl p-5">
+        <section className="surface-card rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-[var(--foreground)]">
             Allocation
           </h2>

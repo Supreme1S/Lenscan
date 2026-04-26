@@ -9,7 +9,7 @@ export function PortfolioHeader({ walletAddress }: PortfolioHeaderProps) {
   const display = shortenWalletAddress(walletAddress);
 
   return (
-    <div className="glass-panel flex flex-col gap-4 border-x-0 border-t-0 px-6 py-4 lg:px-8">
+    <div className="surface-card flex flex-col gap-4 border-x-0 border-t-0 px-6 py-4 lg:px-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
