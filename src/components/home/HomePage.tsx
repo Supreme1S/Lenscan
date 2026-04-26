@@ -46,8 +46,10 @@ export function HomePage() {
           Tokens, DeFi, NFTs and transactions for any Sui wallet — in one place.
         </p>
 
-        <div className="liquid-glass mt-8 w-full rounded-3xl p-3 sm:p-4">
-          <ScanWalletForm />
+        <div className="liquid-surface mt-8 w-full rounded-3xl p-3 sm:p-4">
+          <div className="relative z-10">
+            <ScanWalletForm />
+          </div>
         </div>
       </div>
     </div>

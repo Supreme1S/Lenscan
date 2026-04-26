@@ -1,4 +1,7 @@
+"use client";
+
 import { createFavorite } from "@/app/(routes)/favorites/actions";
+import { LiquidButton } from "@/components/ui/LiquidGlass";
 import { shortenWalletAddress } from "@/lib/data/favorites";
 
 type PortfolioHeaderProps = {
@@ -34,12 +37,15 @@ export function PortfolioHeader({ walletAddress }: PortfolioHeaderProps) {
             className="h-9 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--brand)_25%,transparent)] sm:min-w-[160px]"
             autoComplete="off"
           />
-          <button
+          <LiquidButton
             type="submit"
-            className="h-9 shrink-0 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90"
+            shape="card"
+            padding="px-4 py-2"
+            hue="teal"
+            className="h-9 shrink-0 text-sm font-medium"
           >
             Add to Favorites
-          </button>
+          </LiquidButton>
         </form>
       </div>
     </div>

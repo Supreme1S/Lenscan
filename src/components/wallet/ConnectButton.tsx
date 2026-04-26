@@ -2,6 +2,7 @@
 
 import { ConnectModal, useCurrentAccount, useDisconnectWallet } from "@mysten/dapp-kit";
 import { useState } from "react";
+import { LiquidButton } from "@/components/ui/LiquidGlass";
 import { shortenAddress } from "@/lib/sui/address";
 
 type Props = {
@@ -15,33 +16,35 @@ export function ConnectButton({ variant = "default" }: Props) {
   const [open, setOpen] = useState(false);
 
   const compact = variant === "compact";
-  const baseBtn = compact
-    ? "h-8 rounded-full px-3 text-xs font-medium"
-    : "h-11 rounded-xl px-4 text-sm font-semibold";
+  const padding = compact ? "px-3 py-1.5" : "px-5 py-2.5";
 
   if (account) {
     return (
-      <button
+      <LiquidButton
         type="button"
         onClick={() => disconnect()}
         title="Click to disconnect"
-        className={`${baseBtn} flex items-center gap-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] transition-colors hover:bg-[var(--surface-muted)]`}
+        hue="teal"
+        padding={padding}
+        className={compact ? "text-xs" : "text-sm"}
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" aria-hidden />
         <span className="font-mono">{shortenAddress(account.address)}</span>
-      </button>
+      </LiquidButton>
     );
   }
 
   return (
     <>
-      <button
+      <LiquidButton
         type="button"
         onClick={() => setOpen(true)}
-        className={`${baseBtn} bg-[var(--accent)] text-[var(--accent-foreground)] transition-opacity hover:opacity-90`}
+        hue="indigo"
+        padding={padding}
+        className={compact ? "text-xs" : "text-sm font-semibold"}
       >
         Connect Wallet
-      </button>
+      </LiquidButton>
       <ConnectModal trigger={<span className="hidden" />} open={open} onOpenChange={setOpen} />
     </>
   );

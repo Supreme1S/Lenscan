@@ -46,6 +46,47 @@ const tokenHoldings: TokenHolding[] = [
     valueUsdFormatted: "$1,240.50",
     allocationPct: 4.4,
   },
+  // sub-$1 dust to demo the low-value collapsible group
+  {
+    symbol: "NS",
+    name: "SuiNS Token",
+    priceUsd: "$0.082",
+    change24hPct: 4.2,
+    amount: "6.10",
+    valueUsd: 0.5,
+    valueUsdFormatted: "$0.50",
+    allocationPct: 0,
+  },
+  {
+    symbol: "CETUS",
+    name: "Cetus Protocol",
+    priceUsd: "$0.061",
+    change24hPct: -3.1,
+    amount: "4.30",
+    valueUsd: 0.26,
+    valueUsdFormatted: "$0.26",
+    allocationPct: 0,
+  },
+  {
+    symbol: "BLUE",
+    name: "Bluefin",
+    priceUsd: "$0.0091",
+    change24hPct: -1.8,
+    amount: "12.5",
+    valueUsd: 0.11,
+    valueUsdFormatted: "$0.11",
+    allocationPct: 0,
+  },
+  {
+    symbol: "WAL",
+    name: "Walrus",
+    priceUsd: "$0.0008",
+    change24hPct: 0.4,
+    amount: "60",
+    valueUsd: 0.05,
+    valueUsdFormatted: "$0.05",
+    allocationPct: 0,
+  },
 ];
 
 const defiPositions: DefiPosition[] = [

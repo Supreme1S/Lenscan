@@ -154,7 +154,7 @@ export function PortfolioPage({
           </div>
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-2">
+        <section className="flex flex-col gap-8">
           <HoldingsTable rows={tokenHoldings} />
           <DefiPositionsTable rows={defiPositions} />
         </section>
