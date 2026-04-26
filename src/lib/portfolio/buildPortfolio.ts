@@ -3,13 +3,19 @@
  *
  *  1. suix_getAllBalances — list of coin types + raw totalBalance
  *  2. DefiLlama /prices/current/sui:<coinType>... — price + decimals + symbol
- *  3. For coins DefiLlama can't price → fall back to suix_getCoinMetadata for decimals/symbol
+ *  3. Birdeye multi_price for coins still missing (optional BIRDEYE_API_KEY)
+ *  4. suix_getCoinMetadata for decimals/symbol when Llama didn't return the coin (incl. Birdeye-only rows)
  *
  * Returns the same domain types `<HoldingsTable />` already renders, so the
  * presentation layer stays untouched.
  */
 
-import { fetchSuiPrices, type LlamaPrice } from "@/lib/prices/defiLlama";
+import { fetchBirdeyePrices } from "@/lib/prices/birdeye";
+import {
+  fetchSuiPrices,
+  type LlamaPrice,
+  type LlamaPriceMap,
+} from "@/lib/prices/defiLlama";
 import { fetchCoinMetadataMany } from "@/lib/sui/metadata";
 import { getAllBalances, type SuiBalance } from "@/lib/sui/rpc";
 import type {
@@ -94,24 +100,44 @@ export async function buildRealPortfolio(
   const nonZero = balances.filter((b) => b.totalBalance !== "0");
   const coinTypes = nonZero.map((b) => b.coinType);
 
-  // Step 1 — prices in one batched call(s)
-  const prices = await fetchSuiPrices(coinTypes, signal);
+  // Step 1 — DefiLlama prices
+  const llamaPrices = await fetchSuiPrices(coinTypes, signal);
+  const prices: LlamaPriceMap = { ...llamaPrices };
 
-  // Step 2 — metadata fallback only for coins DefiLlama doesn't know
-  const missing = coinTypes.filter((ct) => !prices[ct]);
-  const metadata = missing.length > 0 ? await fetchCoinMetadataMany(missing, signal) : {};
+  // Step 2 — Birdeye for coins Llama missed (merge into `prices`)
+  const missingFromLlama = coinTypes.filter((ct) => !llamaPrices[ct]);
+  const birdeyePrices = await fetchBirdeyePrices(missingFromLlama, signal);
+  for (const [ct, row] of Object.entries(birdeyePrices)) {
+    if (row) prices[ct] = row;
+  }
+
+  // Step 3 — metadata for any coin Llama didn't return (Birdeye has placeholder decimals/symbol)
+  const missingMeta = coinTypes.filter((ct) => !llamaPrices[ct]);
+  const metadata =
+    missingMeta.length > 0 ? await fetchCoinMetadataMany(missingMeta, signal) : {};
 
   // Build rows
   const pre: TokenHolding[] = nonZero.map((b) => {
     const p: LlamaPrice | undefined = prices[b.coinType];
+    const fromLlama = Boolean(llamaPrices[b.coinType]);
     const md = metadata[b.coinType];
-    const hint: SymbolHint = p
-      ? { decimals: p.decimals, symbol: p.symbol }
-      : md
-        ? { decimals: md.decimals, symbol: md.symbol, name: md.name }
-        : {};
+
+    let hint: SymbolHint;
+    if (fromLlama && p) {
+      hint = { decimals: p.decimals, symbol: p.symbol };
+    } else if (md) {
+      hint = { decimals: md.decimals, symbol: md.symbol, name: md.name };
+    } else if (p) {
+      hint = { decimals: p.decimals, symbol: p.symbol };
+    } else {
+      hint = {};
+    }
+
     const decimals = hint.decimals ?? 9;
-    const symbol = hint.symbol ?? shortSymbolFromCoinType(b.coinType);
+    const symbol =
+      hint.symbol && hint.symbol.length > 0
+        ? hint.symbol
+        : shortSymbolFromCoinType(b.coinType);
     const name = hint.name ?? symbol;
 
     const raw = BigInt(b.totalBalance);
@@ -174,7 +200,10 @@ export async function buildRealPortfolio(
     summary,
     tokenHoldings,
     allocation,
-    unpricedCount: missing.length,
+    unpricedCount: coinTypes.filter((ct) => {
+      const pr = prices[ct];
+      return pr == null || pr.price <= 0;
+    }).length,
     empty: false,
   };
 }
