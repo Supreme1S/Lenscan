@@ -1,0 +1,3 @@
+-- Lenscan favorites: app uses `wallet_address` (not `address`).
+-- No schema change required. UI maps this column as "Address".
+-- RLS: see comment in src/lib/data/favorites.ts

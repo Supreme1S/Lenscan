@@ -1,196 +1,39 @@
 @import "tailwindcss";
 
-/* ---------- Tokens (Sui-blue palette, flat) ---------- */
 :root {
-  --background: #f7f9fc;
-  --foreground: #0c111d;
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --surface: #ffffff;
-  --surface-muted: #f1f5fa;
-  --surface-hover: #e9eff7;
+  --surface-muted: #f1f5f9;
   --border: #e2e8f0;
-  --border-subtle: #eef2f7;
-  --muted: #5b6678;
-
-  /* Sui official accent */
-  --brand: #4da2ff;
-  --brand-hover: #2d8dff;
-  --brand-soft: #eaf4ff;
-  --brand-foreground: #ffffff;
-
-  /* Action accent (CTAs, "Scan", "Connect Wallet") */
-  --accent: #0c111d;
-  --accent-hover: #1c2433;
+  --muted: #64748b;
+  /* Accent: teal */
+  --accent: #0891b2;
   --accent-foreground: #ffffff;
-
-  --success: #16a34a;
-  --success-soft: #dcfce7;
-  --danger: #dc2626;
-  --danger-soft: #fee2e2;
-  --warning: #b45309;
+  --radius: 0.5rem;
 }
 
 html.dark {
-  --background: #0a0e1a;
-  --foreground: #eef2f7;
-  --surface: #11151f;
-  --surface-muted: #1a1f2c;
-  --surface-hover: #232a3a;
-  --border: #232a3a;
-  --border-subtle: #1a1f2c;
+  --background: #0c1222;
+  --foreground: #f1f5f9;
+  --surface: #111827;
+  --surface-muted: #1e293b;
+  --border: #334155;
   --muted: #94a3b8;
-
-  --brand: #4da2ff;
-  --brand-hover: #6db4ff;
-  --brand-soft: #0d2236;
-  --brand-foreground: #ffffff;
-
-  --accent: #eef2f7;
-  --accent-hover: #cbd5e1;
-  --accent-foreground: #0a0e1a;
-
-  --success: #34d399;
-  --success-soft: #082f1d;
-  --danger: #f87171;
-  --danger-soft: #2c0d10;
-  --warning: #fbbf24;
+  --accent: #22d3ee;
+  --accent-foreground: #0c1222;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
   --font-sans: var(--font-geist-sans);
-}
-
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --radius-lg: var(--radius);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  transition: background-color 250ms ease, color 250ms ease;
-}
-
-/* ---------- Building blocks ---------- */
-@layer utilities {
-  /* Plain content panel */
-  .surface-card {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
-  }
-  .surface-card-hover:hover {
-    border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
-    box-shadow: 0 8px 24px -12px rgb(15 23 42 / 0.10);
-  }
-
-  /* Primary action button (Sui blue fill) */
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    background-color: var(--brand);
-    color: var(--brand-foreground);
-    font-weight: 600;
-    border-radius: 0.75rem;
-    transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.2) inset, 0 6px 14px -6px color-mix(in srgb, var(--brand) 50%, transparent);
-  }
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--brand-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.25) inset, 0 12px 20px -8px color-mix(in srgb, var(--brand) 55%, transparent);
-  }
-  .btn-primary:active:not(:disabled) {
-    transform: translateY(0);
-  }
-  .btn-primary:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  /* Neutral secondary */
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    background-color: var(--surface);
-    color: var(--foreground);
-    border: 1px solid var(--border);
-    font-weight: 500;
-    border-radius: 0.75rem;
-    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
-  }
-  .btn-secondary:hover:not(:disabled) {
-    background-color: var(--surface-hover);
-    border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
-  }
-  .btn-secondary:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  /* Ghost (icon button) */
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background-color: transparent;
-    color: var(--muted);
-    border: 1px solid transparent;
-    border-radius: 9999px;
-    transition: background-color 150ms ease, color 150ms ease;
-  }
-  .btn-ghost:hover {
-    background-color: var(--surface-muted);
-    color: var(--foreground);
-  }
-
-  /* Subtle row hover for tables */
-  .row-hover:hover {
-    background-color: color-mix(in srgb, var(--brand-soft) 50%, transparent);
-  }
-
-  /* Animated entrance for cards */
-  @keyframes lenscan-fade-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .anim-fade-up {
-    animation: lenscan-fade-up 360ms cubic-bezier(0.22, 0.9, 0.32, 1) both;
-  }
-
-  /* Shimmer skeleton */
-  @keyframes lenscan-shimmer {
-    0%   { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-  .skeleton {
-    background:
-      linear-gradient(
-        90deg,
-        var(--surface-muted) 0%,
-        color-mix(in srgb, var(--brand) 12%, var(--surface-muted)) 50%,
-        var(--surface-muted) 100%
-      );
-    background-size: 200% 100%;
-    animation: lenscan-shimmer 1.6s linear infinite;
-    border-radius: 0.5rem;
-  }
-}
-
-/* @mysten/dapp-kit ConnectModal — keep it on theme */
-[data-radix-popper-content-wrapper] [role="dialog"],
-[data-dapp-kit] [role="dialog"] {
-  background: var(--surface) !important;
-  color: var(--foreground) !important;
 }
