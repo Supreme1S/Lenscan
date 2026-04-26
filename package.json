@@ -2,6 +2,9 @@
   "name": "lenscan",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -9,6 +12,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
