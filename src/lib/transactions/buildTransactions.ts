@@ -108,14 +108,20 @@ function toRow(tx: TxBlockSummary, address: string): TransactionRow {
 export type RealTransactions = {
   rows: TransactionRow[];
   hasMore: boolean;
+  nextCursor: string | null;
 };
 
 export async function fetchRealTransactions(
   address: string,
   limit = DEFAULT_LIMIT,
   signal?: AbortSignal,
+  cursor: string | null = null,
 ): Promise<RealTransactions> {
-  const result = await queryTransactionBlocks(address, limit, { signal });
+  const result = await queryTransactionBlocks(address, limit, { signal }, cursor);
   const rows = result.data.map((tx) => toRow(tx, address));
-  return { rows, hasMore: result.hasNextPage };
+  return {
+    rows,
+    hasMore: result.hasNextPage,
+    nextCursor: result.nextCursor,
+  };
 }

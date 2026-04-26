@@ -17,11 +17,14 @@ export async function GET(req: Request) {
   const limit = Number.isFinite(rawLimit)
     ? Math.min(100, Math.max(1, Math.floor(rawLimit)))
     : 50;
+  const rawCursor = url.searchParams.get("cursor");
+  const cursor = rawCursor != null && rawCursor.trim() !== "" ? rawCursor.trim() : null;
   try {
-    const result = await fetchRealTransactions(address, limit);
+    const result = await fetchRealTransactions(address, limit, undefined, cursor);
     return NextResponse.json({
       transactions: mapTransactionRowsToUi(result.rows),
       hasMore: result.hasMore,
+      nextCursor: result.nextCursor,
     });
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";

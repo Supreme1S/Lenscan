@@ -31,7 +31,11 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-async function runConcurrent<T>(tasks: (() => Promise<T>)[], concurrency: number): Promise<T[]> {
+async function runConcurrent<T>(
+  tasks: (() => Promise<T>)[],
+  concurrency: number,
+  signal?: AbortSignal,
+): Promise<T[]> {
   const results: T[] = new Array(tasks.length);
   const n = tasks.length;
   if (n === 0) return results;
@@ -43,6 +47,9 @@ async function runConcurrent<T>(tasks: (() => Promise<T>)[], concurrency: number
     while (true) {
       const idx = next++;
       if (idx >= n) return;
+      if (signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
       results[idx] = await tasks[idx]!();
     }
   }
@@ -78,7 +85,7 @@ export async function fetchCoinMetadataMany(
       }
     });
 
-    await runConcurrent(tasks, METADATA_CONCURRENCY);
+    await runConcurrent(tasks, METADATA_CONCURRENCY, signal);
 
     const hasMore = offset + METADATA_CONCURRENCY < unique.length;
     if (hasMore) {

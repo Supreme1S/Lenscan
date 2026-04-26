@@ -112,6 +112,7 @@ export async function queryTransactionBlocks(
   address: string,
   limit = 25,
   opts?: RpcOptions,
+  cursor: string | null = null,
 ): Promise<TxQueryResult> {
   const baseOptions = {
     showEffects: true,
@@ -124,7 +125,7 @@ export async function queryTransactionBlocks(
       "suix_queryTransactionBlocks",
       [
         { filter: { FromAddress: address }, options: baseOptions },
-        null,
+        cursor,
         limit,
         true,
       ],
@@ -134,7 +135,7 @@ export async function queryTransactionBlocks(
       "suix_queryTransactionBlocks",
       [
         { filter: { ToAddress: address }, options: baseOptions },
-        null,
+        cursor,
         limit,
         true,
       ],
@@ -153,7 +154,7 @@ export async function queryTransactionBlocks(
   });
   return {
     data: merged.slice(0, limit),
-    nextCursor: null,
+    nextCursor: from.nextCursor ?? to.nextCursor,
     hasNextPage: from.hasNextPage || to.hasNextPage,
   };
 }

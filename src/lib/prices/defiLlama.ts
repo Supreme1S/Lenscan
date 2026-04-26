@@ -37,15 +37,20 @@ export async function fetchSuiPrices(
 
   const unique = Array.from(new Set(coinTypes));
   for (let i = 0; i < unique.length; i += CHUNK) {
-    const slice = unique.slice(i, i + CHUNK);
-    const url = `${LLAMA}/${slice.map(key).join(",")}`;
-    const res = await fetch(url, { signal, next: { revalidate: 60 } });
-    if (!res.ok) continue;
-    const json = (await res.json()) as { coins?: Record<string, LlamaPrice> };
-    if (!json.coins) continue;
-    for (const [k, v] of Object.entries(json.coins)) {
-      const coinType = k.replace(/^sui:/, "");
-      out[coinType] = v;
+    try {
+      const slice = unique.slice(i, i + CHUNK);
+      const url = `${LLAMA}/${slice.map(key).join(",")}`;
+      const res = await fetch(url, { signal, next: { revalidate: 60 } });
+      if (!res.ok) continue;
+      const json = (await res.json()) as { coins?: Record<string, LlamaPrice> };
+      if (!json.coins) continue;
+      for (const [k, v] of Object.entries(json.coins)) {
+        const coinType = k.replace(/^sui:/, "");
+        out[coinType] = v;
+      }
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") throw e;
+      continue;
     }
   }
   return out;

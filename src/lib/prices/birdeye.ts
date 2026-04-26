@@ -52,7 +52,7 @@ export async function fetchBirdeyePrices(
       for (const [addr, row] of Object.entries(json.data)) {
         if (row == null || typeof row.value !== "number") continue;
         out[addr] = {
-          decimals: 9,
+          decimals: 0, // sentinel: unknown — defer to chain metadata in buildPortfolio
           symbol: "",
           price: row.value,
           timestamp:

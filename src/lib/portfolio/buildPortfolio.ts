@@ -162,8 +162,11 @@ export async function buildRealPortfolio(
     );
   }
 
-  // Step 3 — metadata for any coin Llama didn't return (soft fail)
-  const missingMeta = coinTypes.filter((ct) => !llamaPrices[ct]);
+  // Step 3 — metadata: no merged price yet, or Birdeye-only row (decimals=0 sentinel)
+  const missingMeta = coinTypes.filter((ct) => {
+    const p = prices[ct];
+    return !p || p.decimals === 0;
+  });
   let metadata: Awaited<ReturnType<typeof fetchCoinMetadataMany>> = {};
   if (missingMeta.length > 0) {
     try {
@@ -191,7 +194,7 @@ export async function buildRealPortfolio(
       hint = { decimals: p.decimals, symbol: p.symbol };
     } else if (md) {
       hint = { decimals: md.decimals, symbol: md.symbol, name: md.name };
-    } else if (p) {
+    } else if (p && p.decimals > 0) {
       hint = { decimals: p.decimals, symbol: p.symbol };
     } else {
       hint = {};
