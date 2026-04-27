@@ -47,9 +47,7 @@ async function runConcurrent<T>(
     while (true) {
       const idx = next++;
       if (idx >= n) return;
-      if (signal?.aborted) {
-        throw new DOMException("Aborted", "AbortError");
-      }
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
       results[idx] = await tasks[idx]!();
     }
   }

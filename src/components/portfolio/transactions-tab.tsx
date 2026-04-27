@@ -19,16 +19,21 @@ const ALL_TYPES: MockTxType[] = [
 
 type TransactionsTabProps = {
   transactions: MockTransaction[];
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 };
 
-export function TransactionsTab({ transactions }: TransactionsTabProps) {
+export function TransactionsTab({
+  transactions,
+  onLoadMore,
+  hasMore = false,
+}: TransactionsTabProps) {
   const [typeFilter, setTypeFilter] = useState<Set<MockTxType>>(
     () => new Set(ALL_TYPES),
   );
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [protocolFilter, setProtocolFilter] = useState("");
-  const [visibleCount, setVisibleCount] = useState(50);
 
   const filtered = useMemo(() => {
     return transactions.filter((tx) => {
@@ -45,8 +50,6 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
       return true;
     });
   }, [transactions, typeFilter, dateFrom, dateTo, protocolFilter]);
-
-  const slice = filtered.slice(0, visibleCount);
 
   function toggleType(t: MockTxType) {
     setTypeFilter((prev) => {
@@ -125,7 +128,7 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
-            {slice.map((tx) => (
+            {filtered.map((tx) => (
               <motion.tr
                 key={tx.id}
                 initial={{ opacity: 0 }}
@@ -159,11 +162,12 @@ export function TransactionsTab({ transactions }: TransactionsTabProps) {
         </table>
       </div>
 
-      {visibleCount < filtered.length ? (
+      {onLoadMore ? (
         <Button
           type="button"
           variant="outline"
-          onClick={() => setVisibleCount((c) => c + 50)}
+          onClick={onLoadMore}
+          disabled={!hasMore}
         >
           Load more
         </Button>

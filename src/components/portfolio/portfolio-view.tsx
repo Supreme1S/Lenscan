@@ -26,6 +26,8 @@ export function PortfolioView() {
   const [tokens, setTokens] = useState<WalletTokenRow[]>([]);
   const [collections, setCollections] = useState<MockNftCollection[]>([]);
   const [transactions, setTransactions] = useState<MockTransaction[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -90,11 +92,17 @@ export function PortfolioView() {
         }
         const portfolio = (await pr.json()) as RealPortfolio;
         const nftJson = (await nr.json()) as { collections: MockNftCollection[] };
-        const txJson = (await tr.json()) as { transactions: MockTransaction[] };
+        const txJson = (await tr.json()) as {
+          transactions: MockTransaction[];
+          hasMore: boolean;
+          nextCursor: string | null;
+        };
 
         setTokens(mapHoldingsToTokenRows(portfolio.tokenHoldings));
         setCollections(nftJson.collections);
         setTransactions(txJson.transactions);
+        setHasMore(Boolean(txJson.hasMore));
+        setNextCursor(txJson.nextCursor ?? null);
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Failed to load wallet";
         setLoadError(msg);
@@ -117,6 +125,25 @@ export function PortfolioView() {
     await loadData({ silent: true });
     setRefreshing(false);
   }, [loadData]);
+
+  const loadMoreTransactions = useCallback(async () => {
+    if (!effectiveAddress || nextCursor == null) return;
+    const q = encodeURIComponent(effectiveAddress);
+    const c = encodeURIComponent(nextCursor);
+    const res = await fetch(
+      `/api/wallet/transactions?address=${q}&limit=50&cursor=${c}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return;
+    const body = (await res.json()) as {
+      transactions: MockTransaction[];
+      hasMore: boolean;
+      nextCursor: string | null;
+    };
+    setTransactions((prev) => [...prev, ...body.transactions]);
+    setHasMore(Boolean(body.hasMore));
+    setNextCursor(body.nextCursor ?? null);
+  }, [effectiveAddress, nextCursor]);
 
   const protocolTiles: MockProtocolTile[] = useMemo(() => {
     const walletTotal = tokens.reduce((s, t) => s + t.valueUsd, 0);
@@ -195,7 +222,12 @@ export function PortfolioView() {
                 Loading transactions…
               </div>
             ) : (
-              <TransactionsTab key={effectiveAddress} transactions={transactions} />
+              <TransactionsTab
+                key={effectiveAddress}
+                transactions={transactions}
+                hasMore={hasMore}
+                onLoadMore={() => void loadMoreTransactions()}
+              />
             )}
           </TabsContent>
           <TabsContent value="copilot">
