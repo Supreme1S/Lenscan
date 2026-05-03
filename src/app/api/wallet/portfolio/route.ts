@@ -10,9 +10,9 @@ export const dynamic = "force-dynamic";
 
 function mergeTimeoutSignal(req: Request): AbortSignal {
   if (typeof AbortSignal.any === "function") {
-    return AbortSignal.any([AbortSignal.timeout(10_000), req.signal]);
+    return AbortSignal.any([AbortSignal.timeout(25_000), req.signal]);
   }
-  return AbortSignal.timeout(10_000);
+  return AbortSignal.timeout(25_000);
 }
 
 export async function GET(req: Request) {
@@ -22,6 +22,8 @@ export async function GET(req: Request) {
   if (!isValidSuiAddress(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
   }
+
+  console.log({ address, stage: "start" });
 
   const signal = mergeTimeoutSignal(req);
 

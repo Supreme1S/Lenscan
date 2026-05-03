@@ -16,10 +16,12 @@ import {
   type LlamaPrice,
   type LlamaPriceMap,
 } from "@/lib/prices/defiLlama";
+import { getDefiPositions } from "@/lib/defi/protocols";
 import { fetchCoinMetadataMany } from "@/lib/sui/metadata";
 import { getAllBalances, type SuiBalance } from "@/lib/sui/rpc";
 import type {
   AllocationSlice,
+  DefiPosition,
   PortfolioSummary,
   TokenHolding,
 } from "@/lib/types/portfolio";
@@ -94,6 +96,7 @@ export type RealPortfolio = {
   unpricedCount: number;
   /** True when the wallet had zero coins on chain. */
   empty: boolean;
+  defiPositions: DefiPosition[];
 };
 
 export async function buildRealPortfolio(
@@ -115,12 +118,14 @@ export async function buildRealPortfolio(
         priced: 0,
         unpriced: 0,
         net_worth_usd: 0,
+        defi_usd: 0,
       }),
     );
     return {
       summary: emptySummary(address),
       tokenHoldings: [],
       allocation: [],
+      defiPositions: [],
       unpricedCount: 0,
       empty: true,
     };
@@ -135,13 +140,17 @@ export async function buildRealPortfolio(
   try {
     llamaPrices = await fetchSuiPrices(coinTypes, signal);
   } catch (e) {
-    console.warn(
+    console.error(
       JSON.stringify({
         address,
         stage: "defillama_prices",
         error: errMsg(e),
+        coinTypes,
       }),
     );
+    if (e instanceof Error && e.stack) {
+      console.error(e.stack);
+    }
   }
   const prices: LlamaPriceMap = { ...llamaPrices };
 
@@ -256,11 +265,25 @@ export async function buildRealPortfolio(
       color: ALLOC_COLORS[s.label],
     }));
 
+  let defiPositions: DefiPosition[] = [];
+  try {
+    defiPositions = await getDefiPositions(address, signal);
+  } catch {
+    // soft fail — DeFi is additive, never block portfolio load
+  }
+
+  const defiTotal = defiPositions
+    .filter((p) => p.side !== "borrow")
+    .reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+  const borrowTotal = defiPositions
+    .filter((p) => p.side === "borrow")
+    .reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+  const netWorthTotal = totalValue + defiTotal - borrowTotal;
   const summary: PortfolioSummary = {
     walletAddress: address,
-    netWorthUsd: formatUsd(totalValue),
+    netWorthUsd: formatUsd(netWorthTotal),
     totalTokensUsd: formatUsd(totalValue),
-    totalDefiUsd: "$0.00",
+    totalDefiUsd: formatUsd(defiTotal),
   };
 
   const unpricedCount = coinTypes.filter((ct) => {
@@ -278,7 +301,8 @@ export async function buildRealPortfolio(
       total_coins: balances.length,
       priced: pricedCount,
       unpriced: unpricedCount,
-      net_worth_usd: totalValue,
+      net_worth_usd: netWorthTotal,
+      defi_usd: defiTotal,
     }),
   );
 
@@ -288,6 +312,7 @@ export async function buildRealPortfolio(
     allocation,
     unpricedCount,
     empty: false,
+    defiPositions,
   };
 }
 
@@ -299,3 +324,4 @@ function emptySummary(address: string): PortfolioSummary {
     totalDefiUsd: "$0.00",
   };
 }
+

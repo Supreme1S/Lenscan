@@ -4,19 +4,50 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import { CopilotTab } from "@/components/portfolio/copilot-tab";
 import { NftsTab } from "@/components/portfolio/nfts-tab";
-import { ProtocolBlocks } from "@/components/portfolio/protocol-blocks";
-import { ProtocolTiles } from "@/components/portfolio/protocol-tiles";
+import { ProtocolBlocks, type ProtocolBlock } from "@/components/portfolio/protocol-blocks";
+import { ProtocolTiles, type ProtocolTile } from "@/components/portfolio/protocol-tiles";
 import { TransactionsTab } from "@/components/portfolio/transactions-tab";
 import { WalletHeader } from "@/components/portfolio/wallet-header";
 import { WalletTokensTable } from "@/components/portfolio/wallet-tokens-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { MockNftCollection } from "@/data/mock-nfts";
-import type { MockProtocolTile } from "@/data/mock-portfolio";
 import type { MockTransaction } from "@/data/mock-transactions";
 import { SUI_CHAIN_ICON_URL } from "@/lib/constants/asset-icons";
 import type { RealPortfolio } from "@/lib/portfolio/buildPortfolio";
+import type { DefiPosition } from "@/lib/types/portfolio";
 import { mapHoldingsToTokenRows, type WalletTokenRow } from "@/lib/portfolio/mapTokenRows";
 import { isValidSuiAddress, normalizeSuiAddress } from "@/lib/sui-address";
+
+function mapDefiPositionsToBlocks(positions: DefiPosition[]): ProtocolBlock[] {
+  const byProtocol = new Map<string, DefiPosition[]>();
+  for (const p of positions) {
+    const list = byProtocol.get(p.protocolId) ?? [];
+    list.push(p);
+    byProtocol.set(p.protocolId, list);
+  }
+  const blocks: ProtocolBlock[] = [];
+  for (const [protocolId, arr] of byProtocol) {
+    const totalValueUsd = arr.reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+    const first = arr[0]!;
+    blocks.push({
+      id: protocolId,
+      protocolId,
+      protocolName: first.protocolName,
+      category: first.category,
+      totalValueUsd,
+      isDust: totalValueUsd < 1,
+      rows: arr.map((p) => ({
+        id: p.id,
+        title: p.title,
+        side: p.side,
+        assetSymbol: p.assetSymbol,
+        valueUsd: p.valueUsd ?? 0,
+      })),
+    });
+  }
+  blocks.sort((a, b) => b.totalValueUsd - a.totalValueUsd);
+  return blocks;
+}
 
 export function PortfolioView() {
   const router = useRouter();
@@ -28,6 +59,7 @@ export function PortfolioView() {
   const [transactions, setTransactions] = useState<MockTransaction[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [defiBlocks, setDefiBlocks] = useState<ProtocolBlock[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -99,11 +131,14 @@ export function PortfolioView() {
         };
 
         setTokens(mapHoldingsToTokenRows(portfolio.tokenHoldings));
+        setDefiBlocks(mapDefiPositionsToBlocks(portfolio.defiPositions ?? []));
         setCollections(nftJson.collections);
         setTransactions(txJson.transactions);
         setHasMore(Boolean(txJson.hasMore));
         setNextCursor(txJson.nextCursor ?? null);
       } catch (e) {
+        console.error(e);
+        setDefiBlocks([]);
         const msg = e instanceof Error ? e.message : "Failed to load wallet";
         setLoadError(msg);
       } finally {
@@ -145,20 +180,27 @@ export function PortfolioView() {
     setNextCursor(body.nextCursor ?? null);
   }, [effectiveAddress, nextCursor]);
 
-  const protocolTiles: MockProtocolTile[] = useMemo(() => {
+  const protocolTiles: ProtocolTile[] = useMemo(() => {
     const walletTotal = tokens.reduce((s, t) => s + t.valueUsd, 0);
-    return [
-      {
-        id: "wallet",
-        name: "Wallet",
-        valueUsd: walletTotal,
-        logo: "◆",
-        logoUrl: SUI_CHAIN_ICON_URL,
-        anchorId: "section-wallet",
-        isDust: false,
-      },
-    ];
-  }, [tokens]);
+    const walletTile: ProtocolTile = {
+      id: "wallet",
+      name: "Wallet",
+      valueUsd: walletTotal,
+      logo: "◆",
+      logoUrl: SUI_CHAIN_ICON_URL,
+      anchorId: "section-wallet",
+      isDust: false,
+    };
+    const defiTiles: ProtocolTile[] = defiBlocks.map((b) => ({
+      id: `defi-${b.protocolId}`,
+      name: b.protocolName,
+      valueUsd: b.totalValueUsd,
+      logo: b.protocolName.trim().slice(0, 1).toUpperCase() || "◇",
+      anchorId: `section-defi-${b.protocolId}`,
+      isDust: b.isDust,
+    }));
+    return [walletTile, ...defiTiles];
+  }, [tokens, defiBlocks]);
 
   if (!effectiveAddress) {
     return (
@@ -203,7 +245,12 @@ export function PortfolioView() {
             ) : (
               <WalletTokensTable tokens={tokens} refreshing={refreshing} />
             )}
-            <ProtocolBlocks blocks={[]} showDust={showDustBlocks} refreshing={refreshing} />
+            <ProtocolBlocks
+              key={`defi-${effectiveAddress}-${defiBlocks.length}`}
+              blocks={defiBlocks}
+              showDust={showDustBlocks}
+              refreshing={refreshing}
+            />
           </TabsContent>
           <TabsContent value="nfts">
             {isLoading && !loadError ? (

@@ -2,15 +2,28 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import type { MockProtocolTile } from "@/data/mock-portfolio";
 import { formatUsd } from "@/data/mock-portfolio";
 import { cn } from "@/lib/utils";
 
-function TileLogo({ tile }: { tile: MockProtocolTile }) {
+/** Tile row for the portfolio strip (wallet + DeFi protocol groups). */
+export type ProtocolTile = {
+  id: string;
+  name: string;
+  valueUsd: number;
+  /** Fallback monogram when `logoUrl` is not set. */
+  logo: string;
+  /** Optional remote icon (protocol or chain). */
+  logoUrl?: string;
+  anchorId: string;
+  /** When true, tile is hidden until "Show all". */
+  isDust: boolean;
+};
+
+function TileLogo({ tile }: { tile: ProtocolTile }) {
   const [broken, setBroken] = useState(false);
   if (tile.logoUrl && !broken) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- remote protocol icons; small static list
+      // eslint-disable-next-line @next/next/no-img-element -- remote protocol icons
       <img
         src={tile.logoUrl}
         alt=""
@@ -32,7 +45,7 @@ function TileLogo({ tile }: { tile: MockProtocolTile }) {
 }
 
 type ProtocolTilesProps = {
-  tiles: MockProtocolTile[];
+  tiles: ProtocolTile[];
   onExpandDust?: () => void;
 };
 

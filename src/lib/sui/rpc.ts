@@ -43,8 +43,27 @@ async function rpc<T>(method: string, params: unknown[], opts: RpcOptions = {}):
   return json.result;
 }
 
-export function getAllBalances(address: string, opts?: RpcOptions): Promise<SuiBalance[]> {
-  return rpc<SuiBalance[]>("suix_getAllBalances", [address], opts);
+const CANONICAL_ZERO_SUI_ADDRESS = `0x${"0".repeat(64)}`;
+
+export async function getAllBalances(
+  address: string,
+  opts?: RpcOptions,
+): Promise<SuiBalance[]> {
+  const rows = await rpc<SuiBalance[]>("suix_getAllBalances", [address], opts);
+  if (rows.length === 0) {
+    const a = address.trim();
+    if (a.toLowerCase() !== CANONICAL_ZERO_SUI_ADDRESS) {
+      console.error(
+        JSON.stringify({
+          stage: "suix_getAllBalances",
+          address: a,
+          result: "empty",
+          note: "RPC returned no balances; may be empty wallet or transient RPC error",
+        }),
+      );
+    }
+  }
+  return rows;
 }
 
 export type OwnedObject = {

@@ -1,5 +1,28 @@
 /** Shared domain types for on-chain portfolio builders and protocol adapters. */
 
+export type DefiPositionSide =
+  | "deposit"
+  | "borrow"
+  | "lp"
+  | "staked"
+  | "reward"
+  | "long"
+  | "short"
+  | "other";
+
+export type DefiPosition = {
+  id: string; // unique per position, e.g. "navi-supply-USDC"
+  protocolId: string; // machine id, e.g. "navi"
+  protocolName: string; // display name, e.g. "NAVI Protocol"
+  chainId: "sui";
+  category: "lending" | "dex" | "staking" | "vault" | "perps" | "bridge" | "other";
+  side: DefiPositionSide;
+  title: string; // e.g. "Supply USDC"
+  assetSymbol: string; // e.g. "USDC"
+  valueUsd: number;
+  details?: Record<string, unknown>; // optional protocol-specific extras
+};
+
 export type PortfolioSummary = {
   walletAddress: string;
   netWorthUsd: string;
@@ -42,12 +65,4 @@ export type NftItem = {
   name: string;
   collection: string;
   imageUrl?: string;
-};
-
-/** Placeholder for future protocol adapter results (Navi, Cetus, etc.). */
-export type DefiPosition = {
-  protocolId: string;
-  kind: "lending" | "lp" | "staking" | "other";
-  title: string;
-  valueUsd: number;
 };
