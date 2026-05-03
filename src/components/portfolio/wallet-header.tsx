@@ -5,12 +5,15 @@ import { Copy, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { formatAddressMiddle } from "@/lib/format";
+import type { PortfolioSummary } from "@/lib/types/portfolio";
 
 type WalletHeaderProps = {
   address: string;
   suinsName: string | null;
   onRefresh: () => void;
   refreshing: boolean;
+  /** Populated after portfolio API load — net worth matches server (tokens + DeFi − borrows). */
+  summary?: PortfolioSummary | null;
 };
 
 export function WalletHeader({
@@ -18,6 +21,7 @@ export function WalletHeader({
   suinsName,
   onRefresh,
   refreshing,
+  summary,
 }: WalletHeaderProps) {
   const [copied, setCopied] = useState(false);
 
@@ -68,6 +72,24 @@ export function WalletHeader({
           <p className="mt-1 text-sm text-[var(--muted)]">
             {suinsName ?? "SuiNS: —"}
           </p>
+          {summary ? (
+            <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+              <div>
+                <dt className="text-[var(--muted)]">Net worth</dt>
+                <dd className="font-semibold tabular-nums text-[var(--foreground)]">
+                  {summary.netWorthUsd}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[var(--muted)]">Wallet</dt>
+                <dd className="tabular-nums text-[var(--foreground)]">{summary.totalTokensUsd}</dd>
+              </div>
+              <div>
+                <dt className="text-[var(--muted)]">DeFi (supplies)</dt>
+                <dd className="tabular-nums text-[var(--foreground)]">{summary.totalDefiUsd}</dd>
+              </div>
+            </dl>
+          ) : null}
         </div>
       </div>
     </div>

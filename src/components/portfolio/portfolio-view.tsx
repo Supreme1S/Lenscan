@@ -14,7 +14,7 @@ import type { MockNftCollection } from "@/data/mock-nfts";
 import type { MockTransaction } from "@/data/mock-transactions";
 import { SUI_CHAIN_ICON_URL } from "@/lib/constants/asset-icons";
 import type { RealPortfolio } from "@/lib/portfolio/buildPortfolio";
-import type { DefiPosition } from "@/lib/types/portfolio";
+import type { DefiPosition, PortfolioSummary } from "@/lib/types/portfolio";
 import { mapHoldingsToTokenRows, type WalletTokenRow } from "@/lib/portfolio/mapTokenRows";
 import { isValidSuiAddress, normalizeSuiAddress } from "@/lib/sui-address";
 
@@ -27,7 +27,10 @@ function mapDefiPositionsToBlocks(positions: DefiPosition[]): ProtocolBlock[] {
   }
   const blocks: ProtocolBlock[] = [];
   for (const [protocolId, arr] of byProtocol) {
-    const totalValueUsd = arr.reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+    const totalValueUsd = arr.reduce((s, p) => {
+      const v = p.valueUsd ?? 0;
+      return p.side === "borrow" ? s - v : s + v;
+    }, 0);
     const first = arr[0]!;
     blocks.push({
       id: protocolId,
@@ -60,6 +63,7 @@ export function PortfolioView() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [defiBlocks, setDefiBlocks] = useState<ProtocolBlock[]>([]);
+  const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -131,6 +135,7 @@ export function PortfolioView() {
         };
 
         setTokens(mapHoldingsToTokenRows(portfolio.tokenHoldings));
+        setPortfolioSummary(portfolio.summary);
         setDefiBlocks(mapDefiPositionsToBlocks(portfolio.defiPositions ?? []));
         setCollections(nftJson.collections);
         setTransactions(txJson.transactions);
@@ -139,6 +144,7 @@ export function PortfolioView() {
       } catch (e) {
         console.error(e);
         setDefiBlocks([]);
+        setPortfolioSummary(null);
         const msg = e instanceof Error ? e.message : "Failed to load wallet";
         setLoadError(msg);
       } finally {
@@ -217,6 +223,7 @@ export function PortfolioView() {
         suinsName={null}
         onRefresh={() => void onRefresh()}
         refreshing={refreshing}
+        summary={portfolioSummary}
       />
       <div className="mx-auto max-w-[1440px] space-y-6 px-4 py-6 sm:px-6">
         {loadError ? (

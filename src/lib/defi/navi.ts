@@ -1,4 +1,6 @@
-import { NAVISDKClient } from "navi-sdk";
+import { getAddressPortfolio, NAVISDKClient, pool } from "navi-sdk";
+import type { PoolConfig } from "navi-sdk";
+import { fetchSuiPrices } from "@/lib/prices/defiLlama";
 import type { DefiPosition } from "@/lib/types/portfolio";
 
 /**
@@ -23,6 +25,10 @@ function getNaviClient(): NAVISDKClient {
   return naviClient;
 }
 
+function poolConfig(poolKey: string): PoolConfig | undefined {
+  return pool[poolKey as keyof typeof pool] as PoolConfig | undefined;
+}
+
 export const naviLendingAdapter = {
   id: "navi" as const,
   displayName: "NAVI Lending",
@@ -33,19 +39,44 @@ export const naviLendingAdapter = {
       const account = client.accounts[0];
       if (!account) return [];
 
-      const map = (await account.getNAVIPortfolio(address, false)) as Map<
-        string,
-        PortfolioEntry
-      >;
+      /**
+       * `getAddressPortfolio` fourth arg `decimals`:
+       * - Omitted/false: SDK overwrites with raw `fields.value` × index (huge integers) — must not treat as USD.
+       * - true: keep value/1e9 × index (NAVI’s internal token amount convention per SDK).
+       */
+      const map = (await getAddressPortfolio(
+        address,
+        false,
+        account.client,
+        true,
+      )) as Map<string, PortfolioEntry>;
+
+      if (signal?.aborted) return [];
+
+      const coinTypes: string[] = [];
+      for (const [poolKey, row] of map.entries()) {
+        const cfg = poolConfig(poolKey);
+        if (!cfg) continue;
+        if (Number(row.supplyBalance) > 0 || Number(row.borrowBalance) > 0) {
+          coinTypes.push(cfg.type);
+        }
+      }
+
+      const prices = await fetchSuiPrices([...new Set(coinTypes)], signal);
 
       const out: DefiPosition[] = [];
-      for (const [assetSymbol, row] of map.entries()) {
+      for (const [poolKey, row] of map.entries()) {
+        const cfg = poolConfig(poolKey);
+        if (!cfg) continue;
+
+        const assetSymbol = cfg.name || poolKey;
+        const priceUsd = prices[cfg.type]?.price ?? 0;
         const supplyBalance = Number(row.supplyBalance);
         const borrowBalance = Number(row.borrowBalance);
 
         if (supplyBalance > 0) {
           out.push({
-            id: `navi-supply-${assetSymbol}`,
+            id: `navi-supply-${poolKey}`,
             protocolId: "navi",
             protocolName: "NAVI Lending",
             chainId: "sui",
@@ -53,14 +84,13 @@ export const naviLendingAdapter = {
             side: "deposit",
             title: `Supply ${assetSymbol}`,
             assetSymbol,
-            // TODO: convert token amount to USD (DefiLlama / NAVI price); balances are human-readable token units, not USD.
-            valueUsd: supplyBalance,
-            details: { raw: row },
+            valueUsd: supplyBalance * priceUsd,
+            details: { coinType: cfg.type, priceUsd, raw: row },
           });
         }
         if (borrowBalance > 0) {
           out.push({
-            id: `navi-borrow-${assetSymbol}`,
+            id: `navi-borrow-${poolKey}`,
             protocolId: "navi",
             protocolName: "NAVI Lending",
             chainId: "sui",
@@ -68,9 +98,8 @@ export const naviLendingAdapter = {
             side: "borrow",
             title: `Borrow ${assetSymbol}`,
             assetSymbol,
-            // TODO: convert token amount to USD (DefiLlama / NAVI price); balances are human-readable token units, not USD.
-            valueUsd: borrowBalance,
-            details: { raw: row },
+            valueUsd: borrowBalance * priceUsd,
+            details: { coinType: cfg.type, priceUsd, raw: row },
           });
         }
       }

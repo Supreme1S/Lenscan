@@ -111,21 +111,39 @@ export async function buildRealPortfolio(
   }
 
   if (balances.length === 0) {
+    let defiPositions: DefiPosition[] = [];
+    try {
+      defiPositions = await getDefiPositions(address, signal);
+    } catch {
+      // soft fail — still return wallet-empty portfolio
+    }
+    const defiTotal = defiPositions
+      .filter((p) => p.side !== "borrow")
+      .reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+    const borrowTotal = defiPositions
+      .filter((p) => p.side === "borrow")
+      .reduce((s, p) => s + (p.valueUsd ?? 0), 0);
+    const netWorthTotal = defiTotal - borrowTotal;
     console.log(
       JSON.stringify({
         address,
         total_coins: 0,
         priced: 0,
         unpriced: 0,
-        net_worth_usd: 0,
-        defi_usd: 0,
+        net_worth_usd: netWorthTotal,
+        defi_usd: defiTotal,
       }),
     );
     return {
-      summary: emptySummary(address),
+      summary: {
+        walletAddress: address,
+        netWorthUsd: formatUsd(netWorthTotal),
+        totalTokensUsd: "$0.00",
+        totalDefiUsd: formatUsd(defiTotal),
+      },
       tokenHoldings: [],
       allocation: [],
-      defiPositions: [],
+      defiPositions,
       unpricedCount: 0,
       empty: true,
     };
@@ -315,13 +333,3 @@ export async function buildRealPortfolio(
     defiPositions,
   };
 }
-
-function emptySummary(address: string): PortfolioSummary {
-  return {
-    walletAddress: address,
-    netWorthUsd: "$0.00",
-    totalTokensUsd: "$0.00",
-    totalDefiUsd: "$0.00",
-  };
-}
-

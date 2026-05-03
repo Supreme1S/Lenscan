@@ -70,7 +70,10 @@ export function ProtocolBlocks({
                 </p>
               </div>
             </div>
-            <span className="text-sm font-medium tabular-nums text-[var(--foreground)]">
+            <span
+              className="text-sm font-medium tabular-nums text-[var(--foreground)]"
+              title="Per-protocol net: supplies/LP/stake minus borrows (amounts may be token units until USD pricing is wired)."
+            >
               {formatUsd(block.totalValueUsd)}
             </span>
           </div>
@@ -82,7 +85,12 @@ export function ProtocolBlocks({
                   <th className="px-3 py-2 font-medium text-[var(--muted)]">Title</th>
                   <th className="px-3 py-2 font-medium text-[var(--muted)]">Side</th>
                   <th className="px-3 py-2 font-medium text-[var(--muted)]">Asset</th>
-                  <th className="px-3 py-2 font-medium text-[var(--muted)]">USD</th>
+                  <th
+                    className="px-3 py-2 font-medium text-[var(--muted)]"
+                    title="Shown as USD format; many adapters still pass token units until a shared price layer is applied."
+                  >
+                    Value
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
@@ -91,7 +99,9 @@ export function ProtocolBlocks({
                     <td className="px-3 py-2 font-medium">{row.title}</td>
                     <td className="px-3 py-2">{row.side}</td>
                     <td className="px-3 py-2">{row.assetSymbol}</td>
-                    <td className="px-3 py-2 tabular-nums">{formatUsd(row.valueUsd)}</td>
+                    <td className="px-3 py-2 tabular-nums">
+                      {formatUsd(row.side === "borrow" ? -row.valueUsd : row.valueUsd)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
